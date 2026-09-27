@@ -387,6 +387,11 @@ function ingresarAdmin(){
 
         if(resultado.autorizado){
 
+            sessionStorage.setItem(
+    "tokenAdmin",
+    resultado.token
+);
+            
             document
             .getElementById("accesoAdmin")
             .style.display =
