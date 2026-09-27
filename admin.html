@@ -317,12 +317,114 @@ class="back"
 ← Volver a la tienda
 </a>
 
-
+    
 </main>
 
 </div>
 
+<script>
 
+const URL_SERVIDOR =
+"https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
+
+
+document
+.getElementById("btnIngresarAdmin")
+.addEventListener("click", ingresarAdmin);
+
+
+function ingresarAdmin(){
+
+    const clave =
+        document
+        .getElementById("claveAdmin")
+        .value;
+
+    const mensaje =
+        document
+        .getElementById("mensajeAcceso");
+
+    if(!clave){
+
+        mensaje.textContent =
+            "Ingrese la contraseña.";
+
+        return;
+    }
+
+    mensaje.style.color = "#aaa";
+    mensaje.textContent =
+        "Verificando acceso...";
+
+
+    const datos =
+        new URLSearchParams();
+
+    datos.append(
+        "accion",
+        "verificarAdmin"
+    );
+
+    datos.append(
+        "clave",
+        clave
+    );
+
+
+    fetch(
+        URL_SERVIDOR,
+        {
+            method:"POST",
+            body:datos
+        }
+    )
+
+    .then(function(respuesta){
+        return respuesta.json();
+    })
+
+    .then(function(resultado){
+
+        if(resultado.autorizado){
+
+            document
+            .getElementById("accesoAdmin")
+            .style.display =
+                "none";
+
+            document
+            .getElementById("panelAdmin")
+            .style.display =
+                "block";
+
+        }else{
+
+            mensaje.style.color =
+                "#ff6b6b";
+
+            mensaje.textContent =
+                resultado.mensaje ||
+                "Contraseña incorrecta.";
+        }
+
+    })
+
+    .catch(function(error){
+
+        mensaje.style.color =
+            "#ff6b6b";
+
+        mensaje.textContent =
+            "No se pudo verificar el acceso.";
+
+        console.error(error);
+
+    });
+
+}
+
+</script>
+    
 </body>
 
 </html>
