@@ -862,10 +862,15 @@ function subirFotoDrive(archivo) {
                                 archivo.name
                             ) +
 
-                            "&tipoArchivo=" +
-                            encodeURIComponent(
-                                archivo.type
-                            )
+                         "&tipoArchivo=" +
+encodeURIComponent(
+    archivo.type
+) +
+
+"&tokenAdmin=" +
+encodeURIComponent(
+    sessionStorage.getItem("tokenAdmin") || ""
+)
 
                     }
                 )
