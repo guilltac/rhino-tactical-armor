@@ -859,9 +859,17 @@ function eliminarProducto(id){
     campoId.name = "id";
     campoId.value = id;
 
+    const campoToken =
+    document.createElement("input");
+
+campoToken.type = "hidden";
+campoToken.name = "tokenAdmin";
+campoToken.value =
+    sessionStorage.getItem("tokenAdmin") || "";
 
     formulario.appendChild(accion);
     formulario.appendChild(campoId);
+    formulario.appendChild(campoToken);
 
 
     let iframe =
