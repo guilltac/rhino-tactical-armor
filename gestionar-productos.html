@@ -989,7 +989,9 @@ function guardarEdicion(){
         stock: stock,
         descripcion: descripcion,
         categorias: categorias.join(","),
-        estado: estado
+        estado: estado,
+        tokenAdmin:
+    sessionStorage.getItem("tokenAdmin") || ""
 
     };
 
