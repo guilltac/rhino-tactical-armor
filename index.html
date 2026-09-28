@@ -1556,6 +1556,18 @@ header{
 .relevo-aviso{margin-top:12px;font-size:12px;color:#999!important;}
 @media(max-width:650px){.relevo-options{grid-template-columns:1fr;}.relevo-section{padding:0 10px;}}
 
+
+/* =========================
+   ENTREGA A DOMICILIO RHINO
+========================= */
+.entrega-domicilio-panel{display:none;background:#0d120e;border:1px solid #344235;border-radius:8px;padding:14px;margin:12px 0;}
+.entrega-domicilio-panel h3{color:#7ddd42;margin-bottom:8px;font-size:16px;}
+.entrega-estado{color:#ccc;font-size:13px;line-height:1.5;margin-bottom:12px;}
+.entrega-horarios{display:grid;grid-template-columns:1fr;gap:8px;}
+.entrega-horario{background:#101511;color:#fff;border:1px solid #344235;border-radius:6px;padding:11px;cursor:pointer;text-align:left;}
+.entrega-horario:hover,.entrega-horario.seleccionado{border-color:#69c936;background:#172317;}
+.entrega-resumen{margin-top:10px;color:#bbb;font-size:13px;line-height:1.5;}
+
 </style>
 
 </head>
@@ -2150,7 +2162,7 @@ Continuar compra
 
             <label>Forma de entrega</label>
 
-           <select id="entrega" 
+           <select id="entrega" onchange="actualizarOpcionEntrega()" 
 
     <option value="">
         Seleccione una opción
@@ -2159,6 +2171,12 @@ Continuar compra
 </select>
         </div>
 
+        <div id="panelEntregaDomicilio" class="entrega-domicilio-panel">
+            <h3>🚚 ENTREGA A DOMICILIO</h3>
+            <div id="estadoEntregaDomicilio" class="entrega-estado"></div>
+            <div id="horariosEntregaDomicilio" class="entrega-horarios"></div>
+            <div id="resumenEntregaDomicilio" class="entrega-resumen"></div>
+        </div>
 
         <div class="form-group">
 
@@ -2302,6 +2320,16 @@ const WHATSAPP = "59173272204";
    let productos = [];
 let carrito = [];
 let beneficioPolicial={consultado:false,verificado:false,porcentaje:0,ci:""};
+let entregaProgramadaSeleccionada="";
+/* Configuración temporal del escaparate. En el siguiente paso se conectará al panel administrativo/Apps Script. */
+const CONFIG_ENTREGAS={
+    domicilioActivo:true,
+    inmediataActiva:false,
+    puntoBase:"Cruce de Villas - Teleférico Café",
+    horarios:[
+        {valor:"PROGRAMAR",texto:"Próximos horarios serán publicados por RHINO"}
+    ]
+};
    
 /* =========================
    CARGAR PRODUCTOS
@@ -3092,6 +3120,10 @@ function enviarPedido(){
     const pago=document.getElementById("pago").value;
     const policia=document.getElementById("policia").value;
     const observaciones=document.getElementById("observaciones").value.trim();
+    if(entrega==="Envío a domicilio"&&!entregaProgramadaSeleccionada){
+        alert("Selecciona un horario disponible para la entrega a domicilio.");
+        return;
+    }
     if(!nombre||!apellidoPaterno||!telefono||!ci||!departamento||!direccion||!entrega||!pago){
         alert("Por favor completa todos los campos obligatorios.");
         return;
@@ -3136,6 +3168,7 @@ function enviarPedido(){
     datosPedido.append("estado_pago","PENDIENTE");
     datosPedido.append("estado_pedido","PEDIDO RECIBIDO");
     datosPedido.append("tipo_entrega",entrega);
+    datosPedido.append("entrega_programada",entrega==="Envío a domicilio"?entregaProgramadaSeleccionada:"");
     datosPedido.append("vencimiento_pago",vencimiento.toLocaleString("es-BO"));
     datosPedido.append("ultima_actualizacion",fechaPedido);
     datosPedido.append("observaciones",observaciones);
@@ -3171,6 +3204,7 @@ function enviarPedido(){
             "📌 *Estado:* PENDIENTE DE PAGO";
         carrito=[];
         actualizarCarrito();
+        cargarProductos();
         cerrarCheckout();
         mostrarConfirmacionPedido(idPedido,totalFinal,pago,mensajeConfirmado,{
             verificado:verificadoServidor,
@@ -3306,6 +3340,41 @@ function consultarBeneficioPolicial(){
     });
 }
 
+function actualizarOpcionEntrega(){
+    const tipo=document.getElementById("entrega").value;
+    const panel=document.getElementById("panelEntregaDomicilio");
+    const estado=document.getElementById("estadoEntregaDomicilio");
+    const horarios=document.getElementById("horariosEntregaDomicilio");
+    const resumen=document.getElementById("resumenEntregaDomicilio");
+    entregaProgramadaSeleccionada="";
+    horarios.innerHTML="";
+    resumen.innerHTML="";
+    if(tipo!=="Envío a domicilio"){panel.style.display="none";return;}
+    panel.style.display="block";
+    if(!CONFIG_ENTREGAS.domicilioActivo){
+        estado.innerHTML="Envío a domicilio no disponible en este momento. Puedes seleccionar entrega en punto acordado o recojo en tienda.";
+        return;
+    }
+    if(CONFIG_ENTREGAS.inmediataActiva){
+        estado.innerHTML="✅ Envío a domicilio disponible. En el siguiente paso se incorporará el cálculo de tarifa según la ubicación marcada en el mapa.";
+        entregaProgramadaSeleccionada="ENTREGA INMEDIATA";
+        resumen.innerHTML="Horario seleccionado: <strong>Entrega disponible</strong>";
+        return;
+    }
+    estado.innerHTML="⏱️ Envío a domicilio no disponible de forma inmediata. Puedes programarlo en uno de los horarios habilitados por RHINO:";
+    CONFIG_ENTREGAS.horarios.forEach(function(h){
+        const b=document.createElement("button");
+        b.type="button";b.className="entrega-horario";b.textContent=h.texto;
+        b.onclick=function(){
+            document.querySelectorAll(".entrega-horario").forEach(x=>x.classList.remove("seleccionado"));
+            b.classList.add("seleccionado");
+            entregaProgramadaSeleccionada=h.valor;
+            resumen.innerHTML="Entrega seleccionada: <strong>"+h.texto+"</strong>";
+        };
+        horarios.appendChild(b);
+    });
+}
+
   function actualizarEntrega(){
 
     const departamento =
@@ -3415,6 +3484,7 @@ function consultarBeneficioPolicial(){
 
     }
 
+    actualizarOpcionEntrega();
 }
 /* =========================
    ZONA DE RELEVO
