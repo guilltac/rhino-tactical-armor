@@ -9,6 +9,7 @@
 content="width=device-width, initial-scale=1.0">
 
 <title>RHINO TACTICAL ARMOR | Equipamiento Táctico Bolivia</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <!-- =========================
      VISTA PREVIA PARA WHATSAPP
@@ -1541,21 +1542,21 @@ header{
 }     
 
 /* =========================
-   ZONA DE RELEVO
+   ZONA DE RELEVO LATERAL
 ========================= */
-.relevo-section{max-width:1400px;margin:25px auto;padding:0 20px;}
-.relevo-panel{background:linear-gradient(145deg,rgba(10,15,12,.98),rgba(3,6,5,.98));border:1px solid rgba(91,180,45,.4);border-radius:10px;padding:24px;box-shadow:0 5px 20px rgba(0,0,0,.45);}
-.relevo-panel h2{color:#fff;margin-bottom:8px;}
-.relevo-panel .relevo-lead{color:#7ddd42;font-weight:bold;margin-bottom:10px;}
-.relevo-panel p{color:#ccc;line-height:1.6;}
-.relevo-options{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0;}
-.relevo-option{background:#101511;border:1px solid #344235;border-radius:8px;padding:18px;}
-.relevo-option h3{color:#fff;margin-bottom:8px;}
-.relevo-action{background:linear-gradient(90deg,#315f24,#43852e);color:#fff;border:1px solid #69c936;padding:13px 18px;border-radius:6px;font-weight:bold;cursor:pointer;}
+.relevo-section{min-width:0;}
+.relevo-panel{position:sticky;top:110px;background:linear-gradient(145deg,rgba(10,15,12,.98),rgba(3,6,5,.98));border:1px solid rgba(91,180,45,.4);border-radius:10px;padding:14px;box-shadow:0 5px 20px rgba(0,0,0,.45);}
+.relevo-panel h2{color:#fff;font-size:17px;margin-bottom:8px;}
+.relevo-panel .relevo-lead{color:#7ddd42;font-size:12px;font-weight:bold;margin-bottom:8px;line-height:1.35;}
+.relevo-panel p{color:#bbb;font-size:12px;line-height:1.45;}
+.relevo-options{display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0;}
+.relevo-option{background:#101511;border:1px solid #344235;border-radius:7px;padding:10px;}
+.relevo-option h3{color:#fff;font-size:13px;margin-bottom:5px;}
+.relevo-action{width:100%;background:linear-gradient(90deg,#315f24,#43852e);color:#fff;border:1px solid #69c936;padding:11px 8px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;}
 .relevo-action:hover{background:linear-gradient(90deg,#3b742a,#509b36);}
-.relevo-aviso{margin-top:12px;font-size:12px;color:#999!important;}
-@media(max-width:650px){.relevo-options{grid-template-columns:1fr;}.relevo-section{padding:0 10px;}}
-
+.relevo-aviso{margin-top:9px;font-size:10px!important;color:#888!important;}
+@media(min-width:801px){.container{grid-template-columns:220px minmax(0,1fr) 210px;max-width:1600px;}.relevo-section{grid-column:3;grid-row:1;}}
+@media(max-width:800px){.relevo-section{order:-1;margin:0 0 12px 0;}.relevo-panel{position:relative;top:auto;padding:10px 12px;}.relevo-panel h2{font-size:15px;margin-bottom:4px;}.relevo-panel .relevo-lead{font-size:11px;margin-bottom:6px;}.relevo-options,.relevo-aviso{display:none;}.relevo-panel>p{display:none;}.relevo-action{padding:9px;font-size:11px;}.container{display:flex;flex-direction:column;}}
 
 /* =========================
    ENTREGA A DOMICILIO RHINO
@@ -1567,6 +1568,12 @@ header{
 .entrega-horario{background:#101511;color:#fff;border:1px solid #344235;border-radius:6px;padding:11px;cursor:pointer;text-align:left;}
 .entrega-horario:hover,.entrega-horario.seleccionado{border-color:#69c936;background:#172317;}
 .entrega-resumen{margin-top:10px;color:#bbb;font-size:13px;line-height:1.5;}
+.entrega-ubicacion{margin-top:14px;padding-top:12px;border-top:1px solid #263228;}
+.entrega-ubicacion h4{color:#fff;margin-bottom:7px;font-size:14px;}
+.entrega-ubicacion p{color:#aaa;font-size:12px;line-height:1.4;margin-bottom:8px;}
+#mapaEntrega{height:260px;width:100%;border:1px solid #344235;border-radius:7px;overflow:hidden;}
+.btn-ubicacion{margin:8px 0;background:#172317;color:#fff;border:1px solid #5bb42d;border-radius:6px;padding:9px 11px;cursor:pointer;}
+.coordenadas-entrega{font-size:12px;color:#7ddd42;margin-top:7px;}
 
 </style>
 
@@ -1647,28 +1654,6 @@ header{
         alt="RHINO TACTICAL ARMOR"
     >
 
-</section>
-<!-- =========================
-     ZONA DE RELEVO
-========================= -->
-<section class="relevo-section">
-    <div class="relevo-panel">
-        <h2>♻️ ZONA DE RELEVO</h2>
-        <div class="relevo-lead">¿TIENES EQUIPO QUE YA NO UTILIZAS? DALE UNA NUEVA MISIÓN.</div>
-        <p>RHINO TACTICAL ARMOR te ofrece una alternativa para dar una nueva misión a equipo táctico, uniformes y accesorios en condiciones de reutilización.</p>
-        <div class="relevo-options">
-            <div class="relevo-option">
-                <h3>💰 VÉNDENOS TU EQUIPO</h3>
-                <p>Ofrece tu equipo directamente a RHINO. Revisaremos la información y, si existe interés, podremos realizarte una propuesta.</p>
-            </div>
-            <div class="relevo-option">
-                <h3>🏷️ VENDE CON NOSOTROS</h3>
-                <p>Solicita que RHINO evalúe tu producto para publicarlo en la Zona de Relevo. La publicación estará sujeta a revisión previa.</p>
-            </div>
-        </div>
-        <button class="relevo-action" onclick="abrirRelevo()">♻️ QUIERO DARLE UNA NUEVA MISIÓN A MI EQUIPO</button>
-        <p class="relevo-aviso">Las solicitudes no se publican automáticamente. Todo artículo será revisado antes de ser aceptado o publicado.</p>
-    </div>
 </section>
 <!-- =========================
      CONTENEDOR
@@ -1858,6 +1843,29 @@ Cargando productos...
 
 
 </main>
+
+<!-- =========================
+     ZONA DE RELEVO
+========================= -->
+<section class="relevo-section">
+    <div class="relevo-panel">
+        <h2>♻️ ZONA DE RELEVO</h2>
+        <div class="relevo-lead">¿TIENES EQUIPO QUE YA NO UTILIZAS? DALE UNA NUEVA MISIÓN.</div>
+        <p>RHINO TACTICAL ARMOR te ofrece una alternativa para dar una nueva misión a equipo táctico, uniformes y accesorios en condiciones de reutilización.</p>
+        <div class="relevo-options">
+            <div class="relevo-option">
+                <h3>💰 VÉNDENOS TU EQUIPO</h3>
+                <p>Ofrece tu equipo directamente a RHINO. Revisaremos la información y, si existe interés, podremos realizarte una propuesta.</p>
+            </div>
+            <div class="relevo-option">
+                <h3>🏷️ VENDE CON NOSOTROS</h3>
+                <p>Solicita que RHINO evalúe tu producto para publicarlo en la Zona de Relevo. La publicación estará sujeta a revisión previa.</p>
+            </div>
+        </div>
+        <button class="relevo-action" onclick="abrirRelevo()">♻️ QUIERO DARLE UNA NUEVA MISIÓN A MI EQUIPO</button>
+        <p class="relevo-aviso">Las solicitudes no se publican automáticamente. Todo artículo será revisado antes de ser aceptado o publicado.</p>
+    </div>
+</section>
 
 </div>
 
@@ -2176,6 +2184,14 @@ Continuar compra
             <div id="estadoEntregaDomicilio" class="entrega-estado"></div>
             <div id="horariosEntregaDomicilio" class="entrega-horarios"></div>
             <div id="resumenEntregaDomicilio" class="entrega-resumen"></div>
+            <div id="ubicacionEntregaDomicilio" class="entrega-ubicacion" style="display:none;">
+                <h4>📍 UBICACIÓN DE ENTREGA</h4>
+                <p>Marca en el mapa el punto exacto donde deseas recibir tu pedido. También puedes usar la ubicación de tu dispositivo.</p>
+                <button type="button" class="btn-ubicacion" onclick="usarMiUbicacion()">📍 Usar mi ubicación actual</button>
+                <div id="mapaEntrega"></div>
+                <div id="coordenadasEntrega" class="coordenadas-entrega">Ubicación pendiente de marcar.</div>
+                <input type="hidden" id="entregaLatitud"><input type="hidden" id="entregaLongitud">
+            </div>
         </div>
 
         <div class="form-group">
@@ -2310,6 +2326,7 @@ Continuar compra
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 
    const URL_SERVIDOR =
@@ -2321,6 +2338,8 @@ const WHATSAPP = "59173272204";
 let carrito = [];
 let beneficioPolicial={consultado:false,verificado:false,porcentaje:0,ci:""};
 let entregaProgramadaSeleccionada="";
+let mapaEntrega=null;
+let marcadorEntrega=null;
 /* Configuración temporal del escaparate. En el siguiente paso se conectará al panel administrativo/Apps Script. */
 const CONFIG_ENTREGAS={
     domicilioActivo:true,
@@ -3124,6 +3143,10 @@ function enviarPedido(){
         alert("Selecciona un horario disponible para la entrega a domicilio.");
         return;
     }
+    if(entrega==="Envío a domicilio"&&!document.getElementById("entregaLatitud").value){
+        alert("Marca en el mapa la ubicación donde deseas recibir el pedido.");
+        return;
+    }
     if(!nombre||!apellidoPaterno||!telefono||!ci||!departamento||!direccion||!entrega||!pago){
         alert("Por favor completa todos los campos obligatorios.");
         return;
@@ -3169,6 +3192,8 @@ function enviarPedido(){
     datosPedido.append("estado_pedido","PEDIDO RECIBIDO");
     datosPedido.append("tipo_entrega",entrega);
     datosPedido.append("entrega_programada",entrega==="Envío a domicilio"?entregaProgramadaSeleccionada:"");
+    datosPedido.append("latitud_entrega",entrega==="Envío a domicilio"?document.getElementById("entregaLatitud").value:"");
+    datosPedido.append("longitud_entrega",entrega==="Envío a domicilio"?document.getElementById("entregaLongitud").value:"");
     datosPedido.append("vencimiento_pago",vencimiento.toLocaleString("es-BO"));
     datosPedido.append("ultima_actualizacion",fechaPedido);
     datosPedido.append("observaciones",observaciones);
@@ -3204,8 +3229,8 @@ function enviarPedido(){
             "📌 *Estado:* PENDIENTE DE PAGO";
         carrito=[];
         actualizarCarrito();
-        cargarProductos();
         cerrarCheckout();
+        cargarProductos();
         mostrarConfirmacionPedido(idPedido,totalFinal,pago,mensajeConfirmado,{
             verificado:verificadoServidor,
             porcentaje:porcentajeServidor,
@@ -3346,9 +3371,11 @@ function actualizarOpcionEntrega(){
     const estado=document.getElementById("estadoEntregaDomicilio");
     const horarios=document.getElementById("horariosEntregaDomicilio");
     const resumen=document.getElementById("resumenEntregaDomicilio");
+    const ubicacion=document.getElementById("ubicacionEntregaDomicilio");
     entregaProgramadaSeleccionada="";
     horarios.innerHTML="";
     resumen.innerHTML="";
+    ubicacion.style.display="none";
     if(tipo!=="Envío a domicilio"){panel.style.display="none";return;}
     panel.style.display="block";
     if(!CONFIG_ENTREGAS.domicilioActivo){
@@ -3356,9 +3383,10 @@ function actualizarOpcionEntrega(){
         return;
     }
     if(CONFIG_ENTREGAS.inmediataActiva){
-        estado.innerHTML="✅ Envío a domicilio disponible. En el siguiente paso se incorporará el cálculo de tarifa según la ubicación marcada en el mapa.";
+        estado.innerHTML="✅ Envío a domicilio disponible. Marca la ubicación exacta de entrega.";
         entregaProgramadaSeleccionada="ENTREGA INMEDIATA";
         resumen.innerHTML="Horario seleccionado: <strong>Entrega disponible</strong>";
+        mostrarMapaEntrega();
         return;
     }
     estado.innerHTML="⏱️ Envío a domicilio no disponible de forma inmediata. Puedes programarlo en uno de los horarios habilitados por RHINO:";
@@ -3370,9 +3398,38 @@ function actualizarOpcionEntrega(){
             b.classList.add("seleccionado");
             entregaProgramadaSeleccionada=h.valor;
             resumen.innerHTML="Entrega seleccionada: <strong>"+h.texto+"</strong>";
+            mostrarMapaEntrega();
         };
         horarios.appendChild(b);
     });
+}
+function mostrarMapaEntrega(){
+    const caja=document.getElementById("ubicacionEntregaDomicilio");
+    caja.style.display="block";
+    setTimeout(function(){
+        if(!mapaEntrega){
+            mapaEntrega=L.map("mapaEntrega").setView([-16.50,-68.15],12);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(mapaEntrega);
+            mapaEntrega.on("click",function(e){marcarUbicacionEntrega(e.latlng.lat,e.latlng.lng);});
+        }
+        mapaEntrega.invalidateSize();
+    },120);
+}
+function marcarUbicacionEntrega(lat,lng){
+    document.getElementById("entregaLatitud").value=Number(lat).toFixed(6);
+    document.getElementById("entregaLongitud").value=Number(lng).toFixed(6);
+    document.getElementById("coordenadasEntrega").innerHTML="✅ Ubicación marcada: <strong>"+Number(lat).toFixed(6)+", "+Number(lng).toFixed(6)+"</strong>";
+    if(!marcadorEntrega){marcadorEntrega=L.marker([lat,lng]).addTo(mapaEntrega);}
+    else{marcadorEntrega.setLatLng([lat,lng]);}
+    mapaEntrega.setView([lat,lng],16);
+}
+function usarMiUbicacion(){
+    if(!navigator.geolocation){alert("Tu dispositivo no permite obtener la ubicación automáticamente. Puedes marcarla directamente en el mapa.");return;}
+    navigator.geolocation.getCurrentPosition(function(pos){
+        marcarUbicacionEntrega(pos.coords.latitude,pos.coords.longitude);
+    },function(){
+        alert("No fue posible obtener tu ubicación. Autoriza el acceso a ubicación o marca el punto directamente en el mapa.");
+    },{enableHighAccuracy:true,timeout:10000});
 }
 
   function actualizarEntrega(){
