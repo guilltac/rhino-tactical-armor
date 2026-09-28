@@ -2318,8 +2318,19 @@ function mostrarProductos(lista){
 
         tarjeta.className = "product";
 
-        tarjeta.dataset.category =
-            producto.categorias || "";
+tarjeta.dataset.category =
+    producto.categorias || "";
+
+tarjeta.style.cursor = "pointer";
+
+tarjeta.onclick = function(event){
+
+    if(event.target.closest("button")){
+        return;
+    }
+
+    abrirDetalleProducto(producto.id);
+};
 
         const precio =
             parseFloat(producto.precio);
