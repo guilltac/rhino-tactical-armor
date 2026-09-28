@@ -1971,7 +1971,7 @@ Total: Bs 0
 class="checkout-button"
 onclick="abrirCheckout()">
 
-Continuar pedido por WhatsApp
+Continuar compra
 
 </button>
 
@@ -2209,7 +2209,7 @@ Continuar pedido por WhatsApp
             class="checkout-button"
             onclick="enviarPedido()">
 
-            📲 Solicitar compra por WhatsApp
+            ✅ REALIZAR PEDIDO
 
         </button>
 
@@ -3282,6 +3282,17 @@ datosPedido.append(
     observaciones
 );
 
+const botonPedido =
+    document.querySelector("#modalCheckout .checkout-button");
+
+const textoBotonOriginal =
+    botonPedido ? botonPedido.innerHTML : "";
+
+if(botonPedido){
+    botonPedido.disabled = true;
+    botonPedido.textContent = "Registrando pedido...";
+}
+
 fetch(
     URL_SERVIDOR,
     {
@@ -3289,6 +3300,56 @@ fetch(
         body: datosPedido
     }
 )
+.then(function(respuesta){
+
+    if(!respuesta.ok){
+        throw new Error(
+            "Error HTTP: " + respuesta.status
+        );
+    }
+
+    return respuesta.json();
+})
+.then(function(resultado){
+
+    if(!resultado.ok){
+        throw new Error(
+            resultado.mensaje ||
+            "El pedido no pudo registrarse."
+        );
+    }
+
+    carrito = [];
+    actualizarCarrito();
+    cerrarCheckout();
+
+    const contactarWhatsapp =
+        confirm(
+            "✅ PEDIDO REGISTRADO\n\n" +
+            "Pedido: " + idPedido + "\n" +
+            "Total: Bs " + subtotal.toFixed(2) + "\n" +
+            "Estado: PENDIENTE DE PAGO\n\n" +
+            "Tu pedido fue registrado correctamente en RHINO TACTICAL ARMOR.\n\n" +
+            "¿Deseas contactar también por WhatsApp?\n" +
+            "WhatsApp es opcional."
+        );
+
+    if(contactarWhatsapp){
+
+        const mensajeConfirmado =
+            mensaje +
+            "\n\n🧾 *Código de pedido:* " +
+            idPedido;
+
+        const url =
+            "https://wa.me/" +
+            WHATSAPP +
+            "?text=" +
+            encodeURIComponent(mensajeConfirmado);
+
+        window.open(url, "_blank");
+    }
+})
 .catch(function(error){
 
     console.error(
@@ -3296,20 +3357,19 @@ fetch(
         error
     );
 
-});
-     
-    const url =
-
-        "https://wa.me/" +
-        WHATSAPP +
-        "?text=" +
-        encodeURIComponent(mensaje);
-
-
-    window.open(
-        url,
-        "_blank"
+    alert(
+        "❌ NO SE PUDO REGISTRAR EL PEDIDO.\n\n" +
+        "El carrito se mantiene y WhatsApp no se abrió.\n" +
+        "Por favor intenta nuevamente."
     );
+})
+.finally(function(){
+
+    if(botonPedido){
+        botonPedido.disabled = false;
+        botonPedido.innerHTML = textoBotonOriginal;
+    }
+});
 
 }
 
