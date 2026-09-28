@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestionar categorías | RHINO TACTICAL ARMOR</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#111;color:#eee}
+header{background:#050505;border-bottom:2px solid #556b2f;padding:18px;text-align:center}
+header h1{margin:0;font-size:22px} header p{margin:6px 0 0;color:#aaa}
+main{max-width:1050px;margin:auto;padding:20px}
+.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+button,.btn{border:0;border-radius:7px;padding:11px 15px;font-weight:bold;cursor:pointer}
+.primary{background:#667c3e;color:white} .secondary{background:#333;color:white} .danger{background:#7a2929;color:white}
+.card{background:#1b1b1b;border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:12px}
+.row{display:grid;grid-template-columns:90px 1fr 90px 110px 90px auto;gap:12px;align-items:center}
+.protegida{border-color:#667c3e} .badge{display:inline-block;padding:5px 8px;border-radius:12px;font-size:12px;background:#333}
+.activa{color:#b8d989} .inactiva{color:#e0a0a0}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+input,select{width:100%;padding:10px;border-radius:6px;border:1px solid #444;background:#101010;color:white}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:10;align-items:center;justify-content:center;padding:18px}
+.modal.open{display:flex} .modalbox{width:min(500px,100%);background:#1c1c1c;border:1px solid #555;border-radius:12px;padding:20px}
+.field{margin:12px 0} label{display:block;margin-bottom:6px;color:#bbb}
+.notice{padding:12px;border-radius:7px;margin-bottom:15px;display:none} .ok{background:#203b25} .error{background:#4b2020}
+small{color:#aaa}
+@media(max-width:760px){.row{grid-template-columns:70px 1fr 85px}.row .orden,.row .estado{display:none}.actions{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><h1>RHINO TACTICAL ARMOR</h1><p>Gestión de categorías</p></header>
+<main>
+<div id="mensaje" class="notice"></div>
+<div class="toolbar">
+<button class="secondary" onclick="location.href='admin.html'">← Volver al panel</button>
+<button class="primary" onclick="abrirNueva()">＋ Agregar categoría</button>
+</div>
+<div id="lista"><div class="card">Cargando categorías...</div></div>
+</main>
+
+<div id="modal" class="modal">
+<div class="modalbox">
+<h2 id="tituloModal">Nueva categoría</h2>
+<input type="hidden" id="id">
+<div class="field"><label>Nombre</label><input id="nombre" maxlength="60"></div>
+<div class="field"><label>Icono</label><input id="icono" maxlength="10" placeholder="Ej.: 🥾"></div>
+<div class="field"><label>Estado</label><select id="estado"><option value="ACTIVA">ACTIVA</option><option value="INACTIVA">INACTIVA</option></select></div>
+<div class="field"><label>Orden</label><input id="orden" type="number" min="1"></div>
+<div class="actions">
+<button class="primary" onclick="guardar()">Guardar</button>
+<button class="secondary" onclick="cerrarModal()">Cancelar</button>
+</div>
+</div>
+</div>
+
+<script>
+const URL_SERVIDOR="https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
+const tokenAdmin=sessionStorage.getItem("tokenAdmin");
+if(!tokenAdmin) location.replace("admin.html");
+
+function mostrarMensaje(texto,tipo="ok"){
+ const m=document.getElementById("mensaje");m.textContent=texto;m.className="notice "+tipo;m.style.display="block";
+ setTimeout(()=>m.style.display="none",4500);
+}
+async function post(datos){
+ const body=new URLSearchParams(datos);
+ const r=await fetch(URL_SERVIDOR,{method:"POST",body});
+ const texto=await r.text();
+ try{return JSON.parse(texto)}catch(e){throw new Error(texto||"Respuesta no válida del servidor.");}
+}
+async function cargar(){
+ try{
+  const r=await post({accion:"listarCategorias",tokenAdmin});
+  if(!r.autorizado) return location.replace("admin.html");
+  if(!r.ok) throw new Error(r.mensaje);
+  render(r.categorias||[]);
+ }catch(e){document.getElementById("lista").innerHTML='<div class="card">Error: '+esc(e.message)+'</div>';}
+}
+function render(categorias){
+ const lista=document.getElementById("lista");
+ if(!categorias.length){lista.innerHTML='<div class="card">No hay categorías registradas.</div>';return;}
+ lista.innerHTML=categorias.map(c=>{
+  const protegida=c.protegida===true;
+  return `<div class="card ${protegida?'protegida':''}">
+   <div class="row">
+    <div><strong>${esc(c.id)}</strong></div>
+    <div><strong>${esc(c.icono)} ${esc(c.nombre)}</strong>${protegida?'<br><small>🔒 Categoría protegida del sistema</small>':''}</div>
+    <div class="estado"><span class="badge ${c.estado==='ACTIVA'?'activa':'inactiva'}">${esc(c.estado)}</span></div>
+    <div class="orden">Orden: ${esc(c.orden)}</div>
+    <div></div>
+    <div class="actions">
+     ${protegida?'<span class="badge">No editable</span>':`
+      <button class="secondary" onclick='editar(${JSON.stringify(c)})'>Editar</button>
+      <button class="secondary" onclick="cambiarEstado('${escAttr(c.id)}','${c.estado==='ACTIVA'?'INACTIVA':'ACTIVA'}')">${c.estado==='ACTIVA'?'Desactivar':'Activar'}</button>
+      <button class="danger" onclick="eliminar('${escAttr(c.id)}','${escAttr(c.nombre)}')">Eliminar</button>`}
+    </div>
+   </div></div>`;
+ }).join("");
+}
+function abrirNueva(){
+ document.getElementById("tituloModal").textContent="Agregar categoría";
+ id.value="";nombre.value="";icono.value="";estado.value="ACTIVA";orden.value="";
+ modal.classList.add("open");
+}
+function editar(c){
+ if(c.protegida)return;
+ document.getElementById("tituloModal").textContent="Editar categoría";
+ id.value=c.id;nombre.value=c.nombre;icono.value=c.icono;estado.value=c.estado;orden.value=c.orden;
+ modal.classList.add("open");
+}
+function cerrarModal(){modal.classList.remove("open");}
+async function guardar(){
+ const categoriaId=id.value.trim();
+ if(!nombre.value.trim())return mostrarMensaje("Escribe el nombre de la categoría.","error");
+ try{
+  const accion=categoriaId?"editarCategoria":"crearCategoria";
+  const r=await post({accion,tokenAdmin,id:categoriaId,nombre:nombre.value.trim(),icono:icono.value.trim(),estado:estado.value,orden:orden.value});
+  if(!r.autorizado)return location.replace("admin.html");
+  if(!r.ok)throw new Error(r.mensaje);
+  cerrarModal();mostrarMensaje(r.mensaje);cargar();
+ }catch(e){mostrarMensaje(e.message,"error");}
+}
+async function cambiarEstado(id,nuevo){
+ if(!confirm("¿Cambiar esta categoría a "+nuevo+"?"))return;
+ try{
+  const r=await post({accion:"cambiarEstadoCategoria",tokenAdmin,id,estado:nuevo});
+  if(!r.autorizado)return location.replace("admin.html");
+  if(!r.ok)throw new Error(r.mensaje);
+  mostrarMensaje(r.mensaje);cargar();
+ }catch(e){mostrarMensaje(e.message,"error");}
+}
+async function eliminar(id,nombre){
+ if(!confirm("¿Eliminar la categoría “"+nombre+"”?\n\nSi está asignada a productos, el servidor impedirá eliminarla."))return;
+ try{
+  const r=await post({accion:"eliminarCategoria",tokenAdmin,id});
+  if(!r.autorizado)return location.replace("admin.html");
+  if(!r.ok)throw new Error(r.mensaje);
+  mostrarMensaje(r.mensaje);cargar();
+ }catch(e){mostrarMensaje(e.message,"error");}
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function escAttr(v){return String(v??"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")cerrarModal();});
+cargar();
+</script>
+</body>
+</html>
