@@ -205,6 +205,41 @@ td{
     border-radius:6px;
 }
 
+
+.control-estado{
+    background:#f6f6f6;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:16px;
+}
+
+.control-estado label{
+    display:block;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+.control-estado select{
+    width:100%;
+    padding:11px;
+    border:1px solid #bbb;
+    border-radius:6px;
+    background:white;
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+.btn-guardar-estado{
+    background:#315f24;
+    color:white;
+    width:100%;
+}
+
+.btn-guardar-estado:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
 @media(max-width:650px){
     .datos{
         grid-template-columns:1fr;
@@ -787,6 +822,36 @@ function verPedido(indice){
 
     html +=
         "<div class='seccion'>" +
+        "<h3>⚙️ Cambiar estado del pedido</h3>" +
+        "<div class='control-estado'>" +
+
+            "<label for='nuevoEstadoPedido'>Nuevo estado</label>" +
+
+            "<select id='nuevoEstadoPedido'>" +
+                opcionEstado("PEDIDO RECIBIDO", p.estado_pedido) +
+                opcionEstado("PREPARANDO", p.estado_pedido) +
+                opcionEstado("ENVIADO", p.estado_pedido) +
+                opcionEstado("LISTO PARA RECOGER", p.estado_pedido) +
+                opcionEstado("ENTREGADO", p.estado_pedido) +
+                opcionEstado("CANCELADO", p.estado_pedido) +
+            "</select>" +
+
+            "<button " +
+                "type='button' " +
+                "id='btnGuardarEstadoPedido' " +
+                "class='btn-guardar-estado' " +
+                "onclick='guardarEstadoPedido(" +
+                    JSON.stringify(String(p.id_pedido || "")) +
+                ")'>" +
+                "💾 GUARDAR ESTADO" +
+            "</button>" +
+
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
         "<h3>🧾 Registro interno</h3>" +
         "<div class='datos'>" +
 
@@ -837,6 +902,140 @@ function verPedido(indice){
     .getElementById("modalPedido")
     .style.display = "block";
 
+}
+
+
+
+function opcionEstado(valor, estadoActual){
+
+    const seleccionado =
+        String(valor) === String(estadoActual || "")
+        ? " selected"
+        : "";
+
+    return (
+        "<option value='" +
+        escapar(valor) +
+        "'" +
+        seleccionado +
+        ">" +
+        escapar(valor) +
+        "</option>"
+    );
+}
+
+
+function guardarEstadoPedido(idPedido){
+
+    const selector =
+        document.getElementById("nuevoEstadoPedido");
+
+    const boton =
+        document.getElementById("btnGuardarEstadoPedido");
+
+    if(!selector || !idPedido){
+        return;
+    }
+
+    const nuevoEstado =
+        selector.value;
+
+    if(!confirm(
+        "¿Guardar el estado \"" +
+        nuevoEstado +
+        "\" para este pedido?"
+    )){
+        return;
+    }
+
+    if(boton){
+        boton.disabled = true;
+        boton.textContent = "Guardando...";
+    }
+
+    const datos =
+        new URLSearchParams();
+
+    datos.append(
+        "accion",
+        "actualizarEstadoPedido"
+    );
+
+    datos.append(
+        "tokenAdmin",
+        sessionStorage.getItem("tokenAdmin") || ""
+    );
+
+    datos.append(
+        "id_pedido",
+        idPedido
+    );
+
+    datos.append(
+        "estado_pedido",
+        nuevoEstado
+    );
+
+    fetch(
+        URL_SERVIDOR,
+        {
+            method:"POST",
+            body:datos
+        }
+    )
+    .then(function(respuesta){
+        return respuesta.json();
+    })
+    .then(function(resultado){
+
+        if(!resultado.autorizado){
+
+            sessionStorage.removeItem(
+                "tokenAdmin"
+            );
+
+            alert(
+                resultado.mensaje ||
+                "La sesión administrativa venció."
+            );
+
+            window.location.replace(
+                "admin.html"
+            );
+
+            return;
+        }
+
+        if(!resultado.ok){
+            throw new Error(
+                resultado.mensaje ||
+                "No se pudo actualizar el estado."
+            );
+        }
+
+        alert(
+            "✅ Estado actualizado correctamente:\n\n" +
+            nuevoEstado
+        );
+
+        cerrarPedido();
+        cargarPedidos();
+
+    })
+    .catch(function(error){
+
+        console.error(error);
+
+        alert(
+            "❌ No se pudo actualizar el estado del pedido.\n\n" +
+            error.message
+        );
+
+        if(boton){
+            boton.disabled = false;
+            boton.textContent = "💾 GUARDAR ESTADO";
+        }
+    });
 }
 
 
