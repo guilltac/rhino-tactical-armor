@@ -527,25 +527,34 @@ Varios
 Fotografía principal
 </label>
 
-<input
-type="file"
-id="foto"
-accept="image/*"
->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+">
 
-<button
-type="button"
-onclick="quitarFoto('foto')"
-style="
-    margin-top:8px;
-    width:auto;
-    padding:7px 12px;
-    background:#8b1e1e;
-    font-size:13px;
-"
->
-❌ Quitar foto
-</button>
+    <input
+        type="file"
+        id="foto"
+        accept="image/*"
+        style="flex:1;"
+    >
+
+    <button
+        type="button"
+        onclick="quitarFoto('foto')"
+        title="Quitar fotografía"
+        style="
+            width:44px;
+            min-width:44px;
+            padding:12px 5px;
+            background:#8b1e1e;
+            font-size:15px;
+        "
+    >
+        ❌
+    </button>
+
     
 </div>
 
