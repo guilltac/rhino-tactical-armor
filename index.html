@@ -3122,6 +3122,10 @@ function enviarPedido(){
     datosPedido.append("departamento",departamento);
     datosPedido.append("direccion",direccion);
     datosPedido.append("productos",productosPedido);
+    const detalleStock=carrito.map(function(producto){
+        return String(producto.id)+"|"+String(producto.cantidad||1);
+    }).join(";");
+    datosPedido.append("detalle_stock",detalleStock);
     datosPedido.append("subtotal_productos",subtotal.toFixed(2));
     datosPedido.append("tipo_descuento","");
     datosPedido.append("descuento","0");
