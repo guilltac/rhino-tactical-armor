@@ -240,6 +240,25 @@ td{
     cursor:not-allowed;
 }
 
+
+.control-verificacion{
+    background:#f6f6f6;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:16px;
+}
+
+.btn-verificar-policia{
+    background:#1f4d73;
+    color:white;
+    width:100%;
+}
+
+.btn-verificar-policia:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
 @media(max-width:650px){
     .datos{
         grid-template-columns:1fr;
@@ -852,6 +871,26 @@ function verPedido(indice){
 
     html +=
         "<div class='seccion'>" +
+        "<h3>👮 Verificación policial</h3>" +
+        "<div class='control-verificacion'>" +
+            "<p style='margin-top:0;'>" +
+                "Verifica la condición policial antes de registrar este C.I. como beneficiario." +
+            "</p>" +
+            "<button " +
+                "type='button' " +
+                "id='btnVerificarPolicia' " +
+                "class='btn-verificar-policia' " +
+                "onclick='verificarClientePolicial(" +
+                    JSON.stringify(String(p.id_pedido || "")) +
+                ")'>" +
+                "👮 VERIFICAR FUNCIONARIO POLICIAL" +
+            "</button>" +
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
         "<h3>🧾 Registro interno</h3>" +
         "<div class='datos'>" +
 
@@ -1034,6 +1073,107 @@ function guardarEstadoPedido(idPedido){
         if(boton){
             boton.disabled = false;
             boton.textContent = "💾 GUARDAR ESTADO";
+        }
+    });
+}
+
+
+
+function verificarClientePolicial(idPedido){
+
+    if(!idPedido){
+        return;
+    }
+
+    if(!confirm(
+        "¿Confirmas que verificaste la condición de funcionario policial de este cliente?\n\n" +
+        "Su C.I. quedará registrado como cliente policial verificado."
+    )){
+        return;
+    }
+
+    const boton =
+        document.getElementById("btnVerificarPolicia");
+
+    if(boton){
+        boton.disabled = true;
+        boton.textContent = "Verificando...";
+    }
+
+    const datos =
+        new URLSearchParams();
+
+    datos.append(
+        "accion",
+        "verificarClientePolicial"
+    );
+
+    datos.append(
+        "tokenAdmin",
+        sessionStorage.getItem("tokenAdmin") || ""
+    );
+
+    datos.append(
+        "id_pedido",
+        idPedido
+    );
+
+    fetch(
+        URL_SERVIDOR,
+        {
+            method:"POST",
+            body:datos
+        }
+    )
+    .then(function(respuesta){
+        return respuesta.json();
+    })
+    .then(function(resultado){
+
+        if(!resultado.autorizado){
+
+            sessionStorage.removeItem("tokenAdmin");
+
+            alert(
+                resultado.mensaje ||
+                "La sesión administrativa venció."
+            );
+
+            window.location.replace("admin.html");
+            return;
+        }
+
+        if(!resultado.ok){
+            throw new Error(
+                resultado.mensaje ||
+                "No se pudo verificar al funcionario."
+            );
+        }
+
+        alert(
+            "✅ FUNCIONARIO POLICIAL VERIFICADO\n\n" +
+            "C.I.: " + (resultado.ci || "") + "\n" +
+            "Nombre: " + (resultado.nombre || "")
+        );
+
+        if(boton){
+            boton.disabled = true;
+            boton.textContent = "✅ FUNCIONARIO VERIFICADO";
+        }
+
+    })
+    .catch(function(error){
+
+        console.error(error);
+
+        alert(
+            "❌ No se pudo registrar la verificación.\n\n" +
+            error.message
+        );
+
+        if(boton){
+            boton.disabled = false;
+            boton.textContent = "👮 VERIFICAR FUNCIONARIO POLICIAL";
         }
     });
 }
