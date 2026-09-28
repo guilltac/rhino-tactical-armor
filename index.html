@@ -1577,60 +1577,46 @@ header{
 
 
 /* =========================
-   RHINO - ACCESOS INFERIORES EN CELULAR
+   RHINO - ZONA DE RELEVO INFERIOR EN CELULAR
 ========================= */
 .rhino-mobile-bottom{display:none;}
 @media(max-width:500px){
-    body{padding-bottom:70px;}
+    body{padding-bottom:82px;}
     .rhino-mobile-bottom{
         position:fixed;
         left:10px;
         right:10px;
         bottom:calc(8px + env(safe-area-inset-bottom));
         z-index:1500;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:7px;
-        padding:6px;
-        background:rgba(5,8,6,.94);
-        border:1px solid rgba(91,180,45,.45);
+        display:block;
+        padding:5px;
+        background:rgba(5,8,6,.95);
+        border:1px solid rgba(91,180,45,.5);
         border-radius:10px;
         box-shadow:0 4px 18px rgba(0,0,0,.65);
         backdrop-filter:blur(6px);
     }
-    .rhino-mobile-bottom button{
-        min-width:0;
-        height:42px;
+    .rhino-mobile-relevo{
+        width:100%;
+        min-height:52px;
         border-radius:7px;
-        border:1px solid #456b37;
+        border:1px solid #5bb42d;
+        background:linear-gradient(90deg,#172317,#25491d);
         color:#fff;
-        font-size:11px;
         cursor:pointer;
         display:flex;
         align-items:center;
-        justify-content:center;
-        gap:5px;
-        padding:5px 7px;
+        gap:9px;
+        padding:7px 10px;
+        text-align:left;
     }
-    .rhino-mobile-relevo{background:#172317;}
-    .rhino-mobile-cart{background:#25491d;}
-    .rhino-mobile-count{
-        min-width:19px;
-        height:19px;
-        padding:0 5px;
-        border-radius:10px;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        background:#fff;
-        color:#111;
-        font-size:10px;
-        font-weight:bold;
-    }
-    /* En móvil ocultamos el panel grande de Relevo: el acceso queda siempre abajo. */
+    .rhino-mobile-relevo-icon{font-size:22px;flex-shrink:0;}
+    .rhino-mobile-relevo-text{display:flex;flex-direction:column;min-width:0;flex:1;}
+    .rhino-mobile-relevo-text strong{font-size:12px;color:#8be05b;letter-spacing:.4px;}
+    .rhino-mobile-relevo-text small{font-size:10px;color:#ddd;line-height:1.25;margin-top:2px;}
+    .rhino-mobile-relevo-arrow{font-size:24px;color:#8be05b;flex-shrink:0;}
     .relevo-section{display:none;}
 }
-
 </style>
 
 </head>
@@ -2800,11 +2786,6 @@ function actualizarCarrito(){
     document.getElementById("cart-count").textContent =
         contador;
 
-    const contadorMovil=document.getElementById("cart-count-mobile");
-    if(contadorMovil){
-        contadorMovil.textContent=contador;
-    }
-
     mostrarCarrito();
 }
 
@@ -3666,13 +3647,12 @@ cargarProductos();
 ========================= -->
 <div class="rhino-mobile-bottom">
     <button type="button" class="rhino-mobile-relevo" onclick="abrirRelevo()">
-        <span>♻️</span>
-        <strong>Zona de Relevo</strong>
-    </button>
-    <button type="button" class="rhino-mobile-cart" onclick="abrirCarrito()">
-        <span>🛒</span>
-        <strong>Carrito</strong>
-        <span id="cart-count-mobile" class="rhino-mobile-count">0</span>
+        <span class="rhino-mobile-relevo-icon">♻️</span>
+        <span class="rhino-mobile-relevo-text">
+            <strong>ZONA DE RELEVO <span style="color:#fff;">— DALE UNA NUEVA MISIÓN</span></strong>
+            <small>¿Tienes equipo que ya no utilizas? Véndelo a RHINO o publícalo con nosotros.</small>
+        </span>
+        <span class="rhino-mobile-relevo-arrow">›</span>
     </button>
 </div>
 
