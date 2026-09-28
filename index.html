@@ -2077,7 +2077,8 @@ Continuar compra
     type="text"
     id="ci"
     inputmode="numeric"
-    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+    oninput="this.value=this.value.replace(/[^0-9]/g,''); beneficioPolicial.consultado=false;"
+    onblur="consultarBeneficioPolicial()"
 >
         </div>
 
@@ -2204,19 +2205,7 @@ Continuar compra
         </option>
     </select>
 
-    <div
-        id="avisoPolicial"
-        style="display:none; margin-top:8px; font-size:13px;"
-    >
-        <strong>
-            Descuento policial: 5%
-        </strong>
-
-        <br>
-
-        Se verificará la identidad al momento de la entrega.
-        Si corresponde, se devolverá en efectivo el importe del descuento.
-    </div>
+    <div id="avisoPolicial" style="display:none; margin-top:8px; font-size:13px;"></div>
 
 </div>
 
@@ -2312,6 +2301,7 @@ const WHATSAPP = "59173272204";
 
    let productos = [];
 let carrito = [];
+let beneficioPolicial={consultado:false,verificado:false,porcentaje:0,ci:""};
    
 /* =========================
    CARGAR PRODUCTOS
@@ -3133,7 +3123,7 @@ function enviarPedido(){
     datosPedido.append("direccion",direccion);
     datosPedido.append("productos",productosPedido);
     datosPedido.append("subtotal_productos",subtotal.toFixed(2));
-    datosPedido.append("tipo_descuento",policia==="si"?"BENEFICIO POLICIAL 5%":"");
+    datosPedido.append("tipo_descuento","");
     datosPedido.append("descuento","0");
     datosPedido.append("total_venta",subtotal.toFixed(2));
     datosPedido.append("costo_envio","0");
@@ -3160,6 +3150,11 @@ function enviarPedido(){
         if(!resultado.ok) throw new Error(resultado.mensaje||"El pedido no pudo registrarse.");
         const idPedido=resultado.id_pedido;
         if(!idPedido) throw new Error("El servidor no devolvió el código del pedido.");
+        const totalServidor=parseFloat(resultado.total_a_cobrar);
+        const totalFinal=isNaN(totalServidor)?subtotal:totalServidor;
+        const descuentoServidor=parseFloat(resultado.descuento)||0;
+        const porcentajeServidor=parseFloat(resultado.porcentaje_descuento)||0;
+        const verificadoServidor=resultado.cliente_verificado===true;
         const mensajeConfirmado=
             "🛒 *PEDIDO RHINO TACTICAL ARMOR*\n\n"+
             "🧾 *Código:* "+idPedido+"\n"+
@@ -3167,12 +3162,18 @@ function enviarPedido(){
             "📱 *Teléfono:* "+telefono+"\n"+
             "💳 *Pago:* "+pago+"\n"+
             "📦 *Productos*\n"+productosTexto+
-            "\n💰 *Total: Bs "+subtotal.toFixed(2)+"*\n"+
+            (verificadoServidor&&descuentoServidor>0?"\n👮 *Beneficio policial "+porcentajeServidor+"%:* - Bs "+descuentoServidor.toFixed(2)+"\n":"")+
+            "\n💰 *Total: Bs "+totalFinal.toFixed(2)+"*\n"+
             "📌 *Estado:* PENDIENTE DE PAGO";
         carrito=[];
         actualizarCarrito();
         cerrarCheckout();
-        mostrarConfirmacionPedido(idPedido,subtotal,pago,mensajeConfirmado);
+        mostrarConfirmacionPedido(idPedido,totalFinal,pago,mensajeConfirmado,{
+            verificado:verificadoServidor,
+            porcentaje:porcentajeServidor,
+            descuento:descuentoServidor,
+            subtotal:parseFloat(resultado.subtotal)||subtotal
+        });
     })
     .catch(function(error){
         console.error("Error al registrar pedido:",error);
@@ -3186,12 +3187,17 @@ function enviarPedido(){
     });
 }
 
-function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp){
+function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio){
     document.getElementById("resumenPedidoConfirmado").innerHTML=
         '<div style="line-height:1.8;">'+
         '<strong>Código de pedido:</strong> <span style="color:#7ddd42;font-size:22px;">'+idPedido+'</span><br>'+
-        '<strong>Total:</strong> Bs '+total.toFixed(2)+'<br>'+
+        (beneficio&&beneficio.verificado&&beneficio.descuento>0?
+            '<strong>Subtotal:</strong> Bs '+beneficio.subtotal.toFixed(2)+'<br>'+
+            '<strong style="color:#7ddd42;">Beneficio policial '+beneficio.porcentaje+'%:</strong> - Bs '+beneficio.descuento.toFixed(2)+'<br>':'')+
+        '<strong>Total a pagar:</strong> Bs '+total.toFixed(2)+'<br>'+
         '<strong>Estado:</strong> PENDIENTE DE PAGO<br>'+
+        (beneficio&&beneficio.verificado?
+            '<span style="color:#7ddd42;">✅ FUNCIONARIO POLICIAL VERIFICADO — beneficio aplicado antes del pago.</span><br>':'')+
         '<span style="color:#bbb;">Tu pedido ya fue registrado en RHINO TACTICAL ARMOR.</span>'+
         '</div>';
     const datosPago=document.getElementById("datosPagoPedido");
@@ -3232,22 +3238,68 @@ function cerrarConfirmacionPedido(){
 }
 
   function mostrarAvisoPolicial(){
-
-    const policia =
-        document.getElementById("policia").value;
-
-    const aviso =
-        document.getElementById("avisoPolicial");
-
-    if(policia === "si"){
-
-        aviso.style.display = "block";
-
-    }else{
-
-        aviso.style.display = "none";
-
+    const policia=document.getElementById("policia").value;
+    const aviso=document.getElementById("avisoPolicial");
+    if(policia!=="si"){
+        aviso.style.display="none";
+        beneficioPolicial={consultado:false,verificado:false,porcentaje:0,ci:""};
+        return;
     }
+    aviso.style.display="block";
+    aviso.innerHTML="Consultando beneficio policial...";
+    consultarBeneficioPolicial();
+}
+
+function consultarBeneficioPolicial(){
+    const policia=document.getElementById("policia").value;
+    const ci=document.getElementById("ci").value.trim();
+    const aviso=document.getElementById("avisoPolicial");
+    if(policia!=="si"){
+        aviso.style.display="none";
+        return Promise.resolve();
+    }
+    aviso.style.display="block";
+    if(!ci){
+        aviso.innerHTML="<strong>Beneficio para funcionarios policiales</strong><br>Ingresa tu C.I. para comprobar si ya estás verificado.";
+        return Promise.resolve();
+    }
+    aviso.innerHTML="Consultando verificación...";
+    const datos=new URLSearchParams();
+    datos.append("accion","consultarClientePolicial");
+    datos.append("ci",ci);
+    return fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){
+        if(!respuesta.ok) throw new Error("Error HTTP: "+respuesta.status);
+        return respuesta.json();
+    })
+    .then(function(resultado){
+        const porcentaje=parseFloat(resultado.porcentaje)||0;
+        beneficioPolicial={
+            consultado:true,
+            verificado:resultado.verificado===true,
+            porcentaje:porcentaje,
+            ci:ci
+        };
+        if(beneficioPolicial.verificado){
+            aviso.innerHTML=
+                "<strong>✅ FUNCIONARIO POLICIAL VERIFICADO</strong><br>"+
+                "Beneficio RHINO: <strong>"+porcentaje+"% de descuento</strong>. "+
+                "El descuento será calculado por el servidor y aplicado al monto total antes del pago.";
+        }else{
+            aviso.innerHTML=
+                "<strong>BENEFICIO PARA FUNCIONARIOS POLICIALES</strong><br>"+
+                "Tu condición de funcionario policial aún no se encuentra verificada en RHINO. "+
+                "El beneficio vigente es del <strong>"+porcentaje+"%</strong>. "+
+                "Pagarás el total normal de esta compra y, una vez verificada tu condición, "+
+                "el descuento correspondiente a esta compra será devuelto en efectivo. "+
+                "En tus próximas compras el beneficio se aplicará automáticamente antes del pago.";
+        }
+    })
+    .catch(function(error){
+        console.error("No se pudo consultar el beneficio policial:",error);
+        beneficioPolicial={consultado:false,verificado:false,porcentaje:0,ci:ci};
+        aviso.innerHTML="<strong>Beneficio policial</strong><br>No fue posible comprobar la verificación en este momento. El servidor validará el C.I. al registrar el pedido.";
+    });
 }
 
   function actualizarEntrega(){
