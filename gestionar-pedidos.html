@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RHINO TACTICAL ARMOR - Gestionar pedidos</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f2f2f2;
+    color:#222;
+}
+
+header{
+    background:#151515;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:25px;
+}
+
+header p{
+    margin:7px 0 0;
+    color:#bbb;
+}
+
+.container{
+    max-width:1200px;
+    margin:30px auto;
+    padding:0 20px;
+}
+
+.barra{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.volver{
+    color:#222;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+button{
+    border:0;
+    border-radius:6px;
+    padding:10px 14px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.btn-actualizar{
+    background:#315f24;
+    color:white;
+}
+
+.panel{
+    background:white;
+    border-radius:10px;
+    box-shadow:0 3px 12px rgba(0,0,0,.12);
+    overflow:hidden;
+}
+
+.estado-carga{
+    padding:25px;
+    text-align:center;
+    color:#666;
+}
+
+.tabla-contenedor{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:850px;
+}
+
+th,
+td{
+    padding:13px 12px;
+    border-bottom:1px solid #ddd;
+    text-align:left;
+    vertical-align:middle;
+}
+
+th{
+    background:#222;
+    color:white;
+    font-size:13px;
+}
+
+td{
+    font-size:14px;
+}
+
+.btn-ver{
+    background:#222;
+    color:white;
+    white-space:nowrap;
+}
+
+.estado{
+    display:inline-block;
+    padding:5px 8px;
+    border-radius:12px;
+    background:#eee;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    z-index:9999;
+    inset:0;
+    background:rgba(0,0,0,.72);
+    padding:20px;
+    overflow:auto;
+}
+
+.modal-contenido{
+    max-width:850px;
+    margin:25px auto;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.modal-cabecera{
+    background:#151515;
+    color:white;
+    padding:18px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.modal-cabecera h2{
+    margin:0;
+    font-size:20px;
+}
+
+.btn-cerrar{
+    width:auto;
+    background:#8b1e1e;
+    color:white;
+    font-size:18px;
+}
+
+.modal-cuerpo{
+    padding:22px;
+}
+
+.seccion{
+    margin-bottom:22px;
+}
+
+.seccion h3{
+    margin:0 0 12px;
+    padding-bottom:7px;
+    border-bottom:1px solid #ddd;
+}
+
+.datos{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:10px 20px;
+}
+
+.dato{
+    padding:8px 0;
+    word-break:break-word;
+}
+
+.dato strong{
+    display:block;
+    font-size:12px;
+    color:#666;
+    margin-bottom:4px;
+}
+
+.productos{
+    white-space:pre-line;
+    background:#f6f6f6;
+    padding:12px;
+    border-radius:6px;
+}
+
+@media(max-width:650px){
+    .datos{
+        grid-template-columns:1fr;
+    }
+
+    .container{
+        padding:0 12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<script>
+if (!sessionStorage.getItem("tokenAdmin")) {
+    window.location.replace("admin.html");
+}
+</script>
+
+<header>
+    <h1>RHINO TACTICAL ARMOR</h1>
+    <p>Gestión de pedidos</p>
+</header>
+
+<main class="container">
+
+    <div class="barra">
+        <a href="admin.html" class="volver">
+            ← Volver al panel
+        </a>
+
+        <button
+            type="button"
+            class="btn-actualizar"
+            onclick="cargarPedidos()"
+        >
+            ↻ Actualizar pedidos
+        </button>
+    </div>
+
+    <div class="panel">
+
+        <div id="estadoCarga" class="estado-carga">
+            Cargando pedidos...
+        </div>
+
+        <div
+            id="tablaContenedor"
+            class="tabla-contenedor"
+            style="display:none;"
+        >
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Pago</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tablaPedidos"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<div id="modalPedido" class="modal">
+    <div class="modal-contenido">
+
+        <div class="modal-cabecera">
+            <h2 id="tituloPedido">
+                Detalle del pedido
+            </h2>
+
+            <button
+                type="button"
+                class="btn-cerrar"
+                onclick="cerrarPedido()"
+            >
+                ✕
+            </button>
+        </div>
+
+        <div
+            id="detallePedido"
+            class="modal-cuerpo"
+        ></div>
+
+    </div>
+</div>
+
+<script>
+
+const URL_SERVIDOR =
+"https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
+
+let pedidosCargados = [];
+
+
+function escapar(valor){
+
+    if(
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ){
+        return "-";
+    }
+
+    return String(valor)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+function formatearFecha(valor){
+
+    if(!valor){
+        return "-";
+    }
+
+    const fecha = new Date(valor);
+
+    if(isNaN(fecha.getTime())){
+        return escapar(valor);
+    }
+
+    return fecha.toLocaleString(
+        "es-BO",
+        {
+            dateStyle:"short",
+            timeStyle:"short"
+        }
+    );
+}
+
+
+function formatearDinero(valor){
+
+    if(
+        valor === "" ||
+        valor === null ||
+        valor === undefined
+    ){
+        return "Bs 0.00";
+    }
+
+    const numero = Number(valor);
+
+    if(isNaN(numero)){
+        return "Bs " + escapar(valor);
+    }
+
+    return "Bs " + numero.toFixed(2);
+}
+
+
+function cargarPedidos(){
+
+    const estadoCarga =
+        document.getElementById("estadoCarga");
+
+    const tablaContenedor =
+        document.getElementById("tablaContenedor");
+
+    estadoCarga.style.display = "block";
+    estadoCarga.textContent =
+        "Cargando pedidos...";
+
+    tablaContenedor.style.display = "none";
+
+
+    const datos =
+        new URLSearchParams();
+
+    datos.append(
+        "accion",
+        "listarPedidos"
+    );
+
+    datos.append(
+        "tokenAdmin",
+        sessionStorage.getItem("tokenAdmin") || ""
+    );
+
+
+    fetch(
+        URL_SERVIDOR,
+        {
+            method:"POST",
+            body:datos
+        }
+    )
+
+    .then(function(respuesta){
+        return respuesta.json();
+    })
+
+    .then(function(resultado){
+
+        if(!resultado.autorizado){
+
+            sessionStorage.removeItem(
+                "tokenAdmin"
+            );
+
+            alert(
+                resultado.mensaje ||
+                "La sesión administrativa venció."
+            );
+
+            window.location.replace(
+                "admin.html"
+            );
+
+            return;
+        }
+
+
+        if(!resultado.ok){
+
+            throw new Error(
+                resultado.mensaje ||
+                "No se pudieron cargar los pedidos."
+            );
+        }
+
+
+        pedidosCargados =
+            resultado.pedidos || [];
+
+        mostrarPedidos();
+
+    })
+
+    .catch(function(error){
+
+        console.error(error);
+
+        estadoCarga.style.display =
+            "block";
+
+        estadoCarga.textContent =
+            "❌ No se pudieron cargar los pedidos.";
+
+    });
+
+}
+
+
+function mostrarPedidos(){
+
+    const cuerpo =
+        document.getElementById("tablaPedidos");
+
+    const estadoCarga =
+        document.getElementById("estadoCarga");
+
+    const tablaContenedor =
+        document.getElementById("tablaContenedor");
+
+    cuerpo.innerHTML = "";
+
+
+    if(pedidosCargados.length === 0){
+
+        estadoCarga.style.display =
+            "block";
+
+        estadoCarga.textContent =
+            "No hay pedidos registrados.";
+
+        tablaContenedor.style.display =
+            "none";
+
+        return;
+    }
+
+
+    pedidosCargados.forEach(
+        function(pedido, indice){
+
+            const fila =
+                document.createElement("tr");
+
+            fila.innerHTML =
+                "<td><strong>" +
+                    escapar(pedido.id_pedido) +
+                "</strong></td>" +
+
+                "<td>" +
+                    formatearFecha(
+                        pedido.fecha_pedido
+                    ) +
+                "</td>" +
+
+                "<td>" +
+                    escapar(pedido.cliente) +
+                "</td>" +
+
+                "<td><strong>" +
+                    formatearDinero(
+                        pedido.total_a_cobrar
+                    ) +
+                "</strong></td>" +
+
+                "<td><span class='estado'>" +
+                    escapar(
+                        pedido.estado_pago ||
+                        "PENDIENTE"
+                    ) +
+                "</span></td>" +
+
+                "<td><span class='estado'>" +
+                    escapar(
+                        pedido.estado_pedido ||
+                        "PEDIDO RECIBIDO"
+                    ) +
+                "</span></td>" +
+
+                "<td>" +
+                    "<button " +
+                    "type='button' " +
+                    "class='btn-ver' " +
+                    "onclick='verPedido(" +
+                    indice +
+                    ")'>" +
+                    "👁 Ver" +
+                    "</button>" +
+                "</td>";
+
+            cuerpo.appendChild(fila);
+
+        }
+    );
+
+
+    estadoCarga.style.display =
+        "none";
+
+    tablaContenedor.style.display =
+        "block";
+}
+
+
+function dato(titulo, valor){
+
+    return (
+        "<div class='dato'>" +
+            "<strong>" +
+                escapar(titulo) +
+            "</strong>" +
+            escapar(valor) +
+        "</div>"
+    );
+}
+
+
+function verPedido(indice){
+
+    const p =
+        pedidosCargados[indice];
+
+    if(!p){
+        return;
+    }
+
+    document
+    .getElementById("tituloPedido")
+    .textContent =
+        "Pedido " +
+        (p.id_pedido || "");
+
+
+    let html = "";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>👤 Cliente</h3>" +
+        "<div class='datos'>" +
+
+            dato("Nombre", p.cliente) +
+            dato("Teléfono", p.telefono) +
+            dato("CI", p.ci) +
+            dato("Departamento", p.departamento) +
+            dato("Dirección", p.direccion) +
+            dato("Fecha del pedido", formatearFecha(p.fecha_pedido)) +
+
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>📦 Productos</h3>" +
+        "<div class='productos'>" +
+            escapar(p.productos) +
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>💰 Importes</h3>" +
+        "<div class='datos'>" +
+
+            dato(
+                "Subtotal productos",
+                formatearDinero(
+                    p.subtotal_productos
+                )
+            ) +
+
+            dato(
+                "Tipo de descuento",
+                p.tipo_descuento
+            ) +
+
+            dato(
+                "Descuento",
+                formatearDinero(
+                    p.descuento
+                )
+            ) +
+
+            dato(
+                "Total venta",
+                formatearDinero(
+                    p.total_venta
+                )
+            ) +
+
+            dato(
+                "Costo de envío",
+                formatearDinero(
+                    p.costo_envio
+                )
+            ) +
+
+            dato(
+                "TOTAL A COBRAR",
+                formatearDinero(
+                    p.total_a_cobrar
+                )
+            ) +
+
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>💳 Pago</h3>" +
+        "<div class='datos'>" +
+
+            dato(
+                "Método de pago",
+                p.metodo_pago
+            ) +
+
+            dato(
+                "Estado de pago",
+                p.estado_pago
+            ) +
+
+            dato(
+                "Comprobante",
+                p.comprobante_pago
+            ) +
+
+            dato(
+                "Fecha comprobante",
+                formatearFecha(
+                    p.fecha_comprobante
+                )
+            ) +
+
+            dato(
+                "Fecha verificación",
+                formatearFecha(
+                    p.fecha_verificacion_pago
+                )
+            ) +
+
+            dato(
+                "Verificado por",
+                p.verificado_por
+            ) +
+
+            dato(
+                "Fecha de pago",
+                formatearFecha(
+                    p.fecha_pago
+                )
+            ) +
+
+            dato(
+                "Vencimiento pago",
+                formatearFecha(
+                    p.vencimiento_pago
+                )
+            ) +
+
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>🚚 Pedido y entrega</h3>" +
+        "<div class='datos'>" +
+
+            dato(
+                "Estado del pedido",
+                p.estado_pedido
+            ) +
+
+            dato(
+                "Tipo de entrega",
+                p.tipo_entrega
+            ) +
+
+            dato(
+                "Transportadora",
+                p.transportadora
+            ) +
+
+            dato(
+                "Número de guía",
+                p.numero_guia
+            ) +
+
+            dato(
+                "Fecha preparación",
+                formatearFecha(
+                    p.fecha_preparacion
+                )
+            ) +
+
+            dato(
+                "Fecha envío",
+                formatearFecha(
+                    p.fecha_envio
+                )
+            ) +
+
+            dato(
+                "Fecha entrega",
+                formatearFecha(
+                    p.fecha_entrega
+                )
+            ) +
+
+            dato(
+                "Fecha cancelación",
+                formatearFecha(
+                    p.fecha_cancelacion
+                )
+            ) +
+
+            dato(
+                "Motivo cancelación",
+                p.motivo_cancelacion
+            ) +
+
+        "</div>" +
+        "</div>";
+
+
+    html +=
+        "<div class='seccion'>" +
+        "<h3>🧾 Registro interno</h3>" +
+        "<div class='datos'>" +
+
+            dato(
+                "Última actualización",
+                formatearFecha(
+                    p.ultima_actualizacion
+                )
+            ) +
+
+            dato(
+                "Último aviso al cliente",
+                p.ultimo_aviso_cliente
+            ) +
+
+            dato(
+                "Número de nota",
+                p.numero_nota
+            ) +
+
+            dato(
+                "URL nota PDF",
+                p.url_nota_pdf
+            ) +
+
+            dato(
+                "Fecha nota",
+                formatearFecha(
+                    p.fecha_nota
+                )
+            ) +
+
+            dato(
+                "Observaciones",
+                p.observaciones
+            ) +
+
+        "</div>" +
+        "</div>";
+
+
+    document
+    .getElementById("detallePedido")
+    .innerHTML = html;
+
+
+    document
+    .getElementById("modalPedido")
+    .style.display = "block";
+
+}
+
+
+function cerrarPedido(){
+
+    document
+    .getElementById("modalPedido")
+    .style.display = "none";
+
+}
+
+
+document
+.getElementById("modalPedido")
+.addEventListener(
+    "click",
+    function(event){
+
+        if(event.target === this){
+            cerrarPedido();
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Escape"){
+            cerrarPedido();
+        }
+
+    }
+);
+
+
+cargarPedidos();
+
+</script>
+
+</body>
+</html>
