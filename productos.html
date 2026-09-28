@@ -565,11 +565,35 @@ Fotografía principal
 Fotografía adicional 2
 </label>
 
-<input
-type="file"
-id="foto2"
-accept="image/*"
->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+">
+
+    <input
+        type="file"
+        id="foto2"
+        accept="image/*"
+        style="flex:1;"
+    >
+
+    <button
+        type="button"
+        onclick="quitarFoto('foto2')"
+        title="Quitar fotografía"
+        style="
+            width:44px;
+            min-width:44px;
+            padding:12px 5px;
+            background:#8b1e1e;
+            font-size:15px;
+        "
+    >
+        ❌
+    </button>
+
+</div>
 
 </div>
 
@@ -580,11 +604,35 @@ accept="image/*"
 Fotografía adicional 3
 </label>
 
-<input
-type="file"
-id="foto3"
-accept="image/*"
->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+">
+
+    <input
+        type="file"
+        id="foto3"
+        accept="image/*"
+        style="flex:1;"
+    >
+
+    <button
+        type="button"
+        onclick="quitarFoto('foto3')"
+        title="Quitar fotografía"
+        style="
+            width:44px;
+            min-width:44px;
+            padding:12px 5px;
+            background:#8b1e1e;
+            font-size:15px;
+        "
+    >
+        ❌
+    </button>
+
+</div>
 
 </div>
 
@@ -595,11 +643,35 @@ accept="image/*"
 Fotografía adicional 4
 </label>
 
-<input
-type="file"
-id="foto4"
-accept="image/*"
->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+">
+
+    <input
+        type="file"
+        id="foto4"
+        accept="image/*"
+        style="flex:1;"
+    >
+
+    <button
+        type="button"
+        onclick="quitarFoto('foto4')"
+        title="Quitar fotografía"
+        style="
+            width:44px;
+            min-width:44px;
+            padding:12px 5px;
+            background:#8b1e1e;
+            font-size:15px;
+        "
+    >
+        ❌
+    </button>
+
+</div>
 
 </div>
 
@@ -610,11 +682,35 @@ accept="image/*"
 Fotografía adicional 5
 </label>
 
-<input
-type="file"
-id="foto5"
-accept="image/*"
->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:8px;
+">
+
+    <input
+        type="file"
+        id="foto5"
+        accept="image/*"
+        style="flex:1;"
+    >
+
+    <button
+        type="button"
+        onclick="quitarFoto('foto5')"
+        title="Quitar fotografía"
+        style="
+            width:44px;
+            min-width:44px;
+            padding:12px 5px;
+            background:#8b1e1e;
+            font-size:15px;
+        "
+    >
+        ❌
+    </button>
+
+</div>
 
 </div>
 
@@ -1364,9 +1460,17 @@ if(foto5){
         "activo";
 
 
-    document
-    .getElementById("foto")
-    .value = "";
+    ["foto", "foto2", "foto3", "foto4", "foto5"]
+    .forEach(function(idFoto){
+
+        const campoFoto =
+            document.getElementById(idFoto);
+
+        if (campoFoto) {
+            campoFoto.value = "";
+        }
+
+    });
 
 
     estadoFoto.textContent =
