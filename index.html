@@ -4005,8 +4005,14 @@ function consultarSeguimientoPedido(){
         }else if(pedidoCancelado){
             html+='<div style="margin-top:14px;padding:12px;border:1px solid #8b3a3a;border-radius:7px;"><b>❌ Este pedido fue cancelado.</b><br>No realices ningún pago para este pedido.</div>';
         }else if(String(estadoPago).toUpperCase().includes("PENDIENTE")){
-            html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="seleccionarComprobantePago(\''+
-                escaparHTML(id)+'\',\''+escaparHTML(ci)+'\',this)">📎 CARGAR COMPROBANTE DE PAGO</button>';
+            const metodoNormalizado=String(metodo||"").toUpperCase().trim();
+            const esEfectivo=metodoNormalizado==="EFECTIVO"||metodoNormalizado.includes("EFECTIVO");
+            if(esEfectivo){
+                html+='<div style="margin-top:12px;padding:12px;border:1px solid #c58b24;border-radius:7px;background:#2a2418;"><b>💵 PAGO EN EFECTIVO</b><br>Este pedido fue registrado para pago en efectivo. No necesitas cargar comprobante. RHINO confirmará el pago al momento del cobro o entrega correspondiente.</div>';
+            }else{
+                html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="seleccionarComprobantePago(\''+
+                    escaparHTML(id)+'\',\''+escaparHTML(ci)+'\',this)">📎 CARGAR COMPROBANTE DE PAGO</button>';
+            }
         }else if(String(estadoPago).toUpperCase().includes("VERIFIC")){
             html+='<div style="margin-top:12px;padding:12px;border:1px solid #c58b24;border-radius:7px;"><b>⏳ COMPROBANTE RECIBIDO</b><br>Tu pago está pendiente de verificación por RHINO. No necesitas volver a cargarlo.</div>';
         }else if(pagoConfirmado){
