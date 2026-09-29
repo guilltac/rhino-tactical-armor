@@ -238,7 +238,6 @@ button:hover{
     text-align:center;
 }
 
-
 /* CELULAR */
 
 @media(max-width:600px){
@@ -269,7 +268,6 @@ button:hover{
 
 </head>
 
-
 <body>
 
 <script>
@@ -290,7 +288,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
 </header>
 
-
 <main>
 
 <a
@@ -299,7 +296,6 @@ class="volver"
 >
 ← Volver al panel
 </a>
-
 
 <section class="formulario">
 
@@ -319,7 +315,6 @@ placeholder="Ej. Bota Táctica Urbana"
 
 </div>
 
-
 <div class="grupo">
 
 <label for="precio">
@@ -336,7 +331,6 @@ placeholder="0"
 
 </div>
 
-
 <div class="grupo">
 
 <label for="stock">
@@ -351,7 +345,6 @@ placeholder="0"
 >
 
 </div>
-
 
 <div class="grupo">
 
@@ -372,7 +365,6 @@ Agotado
 </select>
 
 </div>
-
 
 <div class="grupo">
 
@@ -402,123 +394,18 @@ style="min-height:180px;"
 </div>
     
 <div class="grupo">
+<label for="categoriaPrincipal">Categoría principal</label>
+<select id="categoriaPrincipal">
+<option value="">Cargando categorías...</option>
+</select>
+<small style="display:block;margin-top:6px;color:#666;">La categoría principal determina el código del producto.</small>
+</div>
 
-<label>
-Categorías
-</label>
-
-
-<div class="categorias">
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="novedades"
->
-
-Novedades
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="botas"
->
-
-Botas
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="tactico"
->
-
-Equipo Táctico
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="uniformes"
->
-
-Uniformes
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="aph"
->
-
-APH
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="promo"
->
-
-Promociones
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="reacondicionados"
->
-
-Uniformes Reacondicionados
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="relevo"
->
-
-Zona de Relevo
-
-</label>
-
-
-<label class="category-option">
-
-<input
-type="checkbox"
-value="varios"
->
-
-Varios
-
-</label>
-
-
+<div class="grupo">
+<label>Categorías adicionales</label>
+<div class="categorias" id="categoriasAdicionales">
+<div style="color:#777;">Cargando categorías...</div>
+</div>
 </div>
 
 <div class="grupo">
@@ -555,9 +442,7 @@ Fotografía principal
         ❌
     </button>
 
-    
 </div>
-
 
 <div class="grupo">
 
@@ -597,7 +482,6 @@ Fotografía adicional 2
 
 </div>
 
-
 <div class="grupo">
 
 <label for="foto3">
@@ -635,7 +519,6 @@ Fotografía adicional 3
 </div>
 
 </div>
-
 
 <div class="grupo">
 
@@ -675,7 +558,6 @@ Fotografía adicional 4
 
 </div>
 
-
 <div class="grupo">
 
 <label for="foto5">
@@ -714,7 +596,6 @@ Fotografía adicional 5
 
 </div>
 
-
 <div
     id="estadoFoto"
     style="
@@ -723,7 +604,6 @@ Fotografía adicional 5
         font-size:13px;
     "
 ></div>
-
 
 <button
 type="button"
@@ -734,14 +614,12 @@ Guardar producto
 
 </button>
 
-
 <div
 id="mensaje"
 class="mensaje"
 >
 Producto enviado correctamente.
 </div>
-
 
 </section>
 
@@ -771,12 +649,80 @@ Producto enviado correctamente.
 
 </main>
 
-
 <script>
-
 
     const URL_SERVIDOR =
     "https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
+
+    let categoriasDisponibles = [];
+
+    function valorCategoria(nombre,id){
+        const n=String(nombre||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+        const conocidos={
+            "novedades":"novedades",
+            "botas":"botas",
+            "equipo tactico":"tactico",
+            "uniformes":"uniformes",
+            "aph":"aph",
+            "promociones":"promo",
+            "uniformes reacondicionados":"reacondicionados",
+            "zona de relevo":"relevo",
+            "varios":"varios",
+            "tecnologia y comunicacion":"tecnologia"
+        };
+        return conocidos[n] || ("cat_"+String(id||"").toLowerCase());
+    }
+
+    async function cargarCategoriasProducto(){
+        const principal=document.getElementById("categoriaPrincipal");
+        const adicionales=document.getElementById("categoriasAdicionales");
+        try{
+            const body=new URLSearchParams({
+                accion:"listarCategorias",
+                tokenAdmin:sessionStorage.getItem("tokenAdmin")||""
+            });
+            const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body});
+            const resultado=await respuesta.json();
+            if(!resultado.autorizado){
+                window.location.replace("admin.html");
+                return;
+            }
+            if(!resultado.ok)throw new Error(resultado.mensaje||"No se pudieron cargar las categorías.");
+
+            categoriasDisponibles=(resultado.categorias||[])
+                .filter(c=>String(c.estado||"").toUpperCase()==="ACTIVA")
+                .sort((a,b)=>(Number(a.orden)||0)-(Number(b.orden)||0));
+
+            const principales=categoriasDisponibles.filter(c=>
+                String(c.puede_ser_principal||"NO").toUpperCase()==="SI" &&
+                /^[A-Z]{3}$/.test(String(c.prefijo||"").toUpperCase())
+            );
+
+            principal.innerHTML='<option value="">Selecciona una categoría principal</option>'+
+                principales.map(c=>
+                    '<option value="'+escHtml(c.id)+'">'+
+                    escHtml((c.icono?c.icono+" ":"")+c.nombre+" ("+c.prefijo+")")+
+                    '</option>'
+                ).join("");
+
+            adicionales.innerHTML=categoriasDisponibles.map(c=>{
+                const valor=valorCategoria(c.nombre,c.id);
+                return '<label class="category-option">'+
+                    '<input type="checkbox" class="categoria-adicional" value="'+escHtml(valor)+'" data-id="'+escHtml(c.id)+'"> '+
+                    escHtml((c.icono?c.icono+" ":"")+c.nombre)+
+                    '</label>';
+            }).join("");
+        }catch(error){
+            principal.innerHTML='<option value="">Error al cargar categorías</option>';
+            adicionales.innerHTML='<div style="color:#8b1e1e;">'+escHtml(error.message)+'</div>';
+        }
+    }
+
+    function escHtml(valor){
+        return String(valor??"").replace(/[&<>"']/g,function(m){
+            return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];
+        });
+    }
 
     function subirFotoDrive_PRUEBA(archivo) {
         
@@ -798,10 +744,8 @@ alert("LA FUNCIÓN DE SUBIDA SE ESTÁ EJECUTANDO");
         estadoFoto.textContent =
             "📷 Preparando fotografía...";
 
-
         const lector =
             new FileReader();
-
 
         lector.onload = function(e) {
 
@@ -825,10 +769,8 @@ alert("LA FUNCIÓN DE SUBIDA SE ESTÁ EJECUTANDO");
                     "_" +
                     archivo.name;
 
-
                 estadoFoto.textContent =
                     "📤 Subiendo fotografía...";
-
 
                 /*
                  * Por ahora utilizamos una petición
@@ -892,7 +834,6 @@ console.log(
 
                 });
 
-
             } catch(error) {
 
                 reject(error);
@@ -901,14 +842,12 @@ console.log(
 
         };
 
-
         lector.onerror =
             function(error){
 
                 reject(error);
 
             };
-
 
         lector.readAsDataURL(archivo);
 
@@ -939,7 +878,6 @@ function subirFotoDrive(archivo) {
         estado.textContent =
             "📷 Preparando fotografía...";
 
-
         lector.onload =
             function(e) {
 
@@ -949,10 +887,8 @@ function subirFotoDrive(archivo) {
                 const base64 =
                     partes[1];
 
-
                 estado.textContent =
                     "📤 Subiendo fotografía...";
-
 
                 fetch(
                     URL_SERVIDOR,
@@ -1007,10 +943,8 @@ encodeURIComponent(
                         texto
                     );
 
-
                     const resultado =
                         JSON.parse(texto);
-
 
                     if(!resultado.ok){
 
@@ -1020,7 +954,6 @@ encodeURIComponent(
                         );
 
                     }
-
 
                     estado.textContent =
                         "✅ Fotografía guardada correctamente.";
@@ -1048,7 +981,6 @@ encodeURIComponent(
 
             };
 
-
         lector.onerror =
             function(){
 
@@ -1059,7 +991,6 @@ encodeURIComponent(
                 );
 
             };
-
 
         lector.readAsDataURL(archivo);
 
@@ -1127,35 +1058,34 @@ const foto5 =
     .getElementById("foto5")
     .files[0];
 
+    const categoriaPrincipal =
+        document.getElementById("categoriaPrincipal").value;
 
     const categorias =
         Array.from(
             document.querySelectorAll(
-                'input[type="checkbox"]:checked'
+                '.categoria-adicional:checked'
             )
         )
         .map(function(categoria){
-
             return categoria.value;
-
         })
         .join(",");
-
 
     if(
         nombre === "" ||
         precio === "" ||
-        stock === ""
+        stock === "" ||
+        categoriaPrincipal === ""
     ){
 
         alert(
-            "Completa nombre, precio y stock."
+            "Completa nombre, precio, stock y categoría principal."
         );
 
         return;
 
     }
-
 
     const mensaje =
         document.getElementById(
@@ -1166,7 +1096,6 @@ const foto5 =
         document.getElementById(
             "estadoFoto"
         );
-
 
     /* =========================
        SUBIR FOTOGRAFÍA
@@ -1227,7 +1156,6 @@ const foto5 =
     }
 }
 
-
 if(foto3){
 
     try {
@@ -1250,7 +1178,6 @@ if(foto3){
     }
 }
 
-
 if(foto4){
 
     try {
@@ -1272,7 +1199,6 @@ if(foto4){
         return;
     }
 }
-
 
 if(foto5){
 
@@ -1302,7 +1228,9 @@ if(foto5){
 
     const datos = {
 
-    id: Date.now(),
+    id: "",
+
+    categoriaPrincipal: categoriaPrincipal,
 
     nombre: nombre,
 
@@ -1333,106 +1261,52 @@ if(foto5){
 
 };
 
-
     /* =========================
        ENVIAR PRODUCTO
        ========================= */
 
-    const formulario =
-        document.createElement("form");
+    try{
+        const cuerpo=new URLSearchParams();
+        Object.keys(datos).forEach(function(campo){
+            cuerpo.append(campo,datos[campo]);
+        });
 
+        const respuesta=await fetch(URL_SERVIDOR,{
+            method:"POST",
+            body:cuerpo
+        });
 
-    formulario.method =
-        "POST";
-
-
-    formulario.action =
-        URL_SERVIDOR;
-
-
-    formulario.target =
-        "guilltac_envio";
-
-
-    Object.keys(datos).forEach(
-        function(campo){
-
-            const input =
-                document.createElement(
-                    "input"
-                );
-
-            input.type =
-                "hidden";
-
-            input.name =
-                campo;
-
-            input.value =
-                datos[campo];
-
-            formulario.appendChild(
-                input
-            );
-
+        const texto=await respuesta.text();
+        let resultado;
+        try{
+            resultado=JSON.parse(texto);
+        }catch(e){
+            throw new Error(texto||"Respuesta no válida del servidor.");
         }
-    );
 
+        if(resultado.autorizado===false){
+            window.location.replace("admin.html");
+            return;
+        }
 
-    const iframe =
-        document.createElement("iframe");
+        if(!resultado.ok){
+            throw new Error(resultado.mensaje||"No se pudo guardar el producto.");
+        }
 
+        mensaje.innerHTML =
+            "✅ PRODUCTO REGISTRADO CORRECTAMENTE<br><br>" +
+            "🏷️ Código asignado: <strong>" + escHtml(resultado.id) + "</strong><br>" +
+            "📦 Producto: " + escHtml(nombre) + "<br>" +
+            "💰 Precio: Bs " + escHtml(precio) + "<br>" +
+            "📦 Stock: " + escHtml(stock) + "<br>" +
+            (urlFoto ? "📷 Fotografía guardada en Drive" : "📷 Sin fotografía");
 
-    iframe.name =
-        "guilltac_envio";
-
-
-    iframe.style.display =
-        "none";
-
-
-    document.body.appendChild(
-        iframe
-    );
-
-
-    document.body.appendChild(
-        formulario
-    );
-
-
-    formulario.submit();
-
-
-    /* =========================
-       MENSAJE
-       ========================= */
-
-    mensaje.innerHTML =
-        "✅ PRODUCTO REGISTRADO CORRECTAMENTE<br><br>" +
-
-        "📦 Producto: " +
-        nombre +
-        "<br>" +
-
-        "💰 Precio: Bs " +
-        precio +
-        "<br>" +
-
-        "📦 Stock: " +
-        stock +
-        "<br>" +
-
-        (
-            urlFoto
-            ? "📷 Fotografía guardada en Drive"
-            : "📷 Sin fotografía"
-        );
-
-
-    mensaje.style.display =
-        "block";
-
+        mensaje.style.display="block";
+    }catch(error){
+        console.error(error);
+        alert("No se pudo guardar el producto: "+error.message);
+        return;
+    }
 
     /* =========================
        LIMPIAR FORMULARIO
@@ -1455,10 +1329,17 @@ if(foto5){
     .value = "";
 
     document
+    .getElementById("descripcionDetallada")
+    .value = "";
+
+    document
+    .getElementById("categoriaPrincipal")
+    .value = "";
+
+    document
     .getElementById("estado")
     .value =
         "activo";
-
 
     ["foto", "foto2", "foto3", "foto4", "foto5"]
     .forEach(function(idFoto){
@@ -1472,14 +1353,12 @@ if(foto5){
 
     });
 
-
     estadoFoto.textContent =
         "";
 
-
     document
     .querySelectorAll(
-        'input[type="checkbox"]'
+        '.categoria-adicional'
     )
     .forEach(function(caja){
 
@@ -1488,6 +1367,8 @@ if(foto5){
     });
 
 }
+
+cargarCategoriasProducto();
 
 function quitarFoto(idFoto) {
 
@@ -1501,7 +1382,6 @@ function quitarFoto(idFoto) {
 }
     
 </script>
-
 
 </body>
 
