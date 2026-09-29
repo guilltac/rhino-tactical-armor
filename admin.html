@@ -76,6 +76,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 </div>
 </div>
 <a href="index.html" class="back">← Volver a la tienda</a>
+<button type="button" class="back" onclick="cerrarSesionAdmin()" style="border:0;cursor:pointer;margin-left:10px;background:#8b1e1e;">🔒 Cerrar sesión</button>
 </main>
 </div>
 <script>
@@ -91,8 +92,44 @@ function mostrarAccesoAdmin(){
     document.getElementById("panelAdmin").style.display="none";
 }
 
+const TIEMPO_INACTIVIDAD_ADMIN=30*60*1000;
+let temporizadorInactividadAdmin=null;
+
+function cerrarSesionAdmin(){
+    sessionStorage.removeItem("tokenAdmin");
+    sessionStorage.removeItem("ultimaActividadAdmin");
+    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
+    mostrarAccesoAdmin();
+    document.getElementById("claveAdmin").value="";
+    document.getElementById("mensajeAcceso").textContent="";
+}
+
+function comprobarInactividadAdmin(){
+    if(!sessionStorage.getItem("tokenAdmin"))return;
+    const ultimaActividad=Number(sessionStorage.getItem("ultimaActividadAdmin")||0);
+    if(!ultimaActividad||Date.now()-ultimaActividad>=TIEMPO_INACTIVIDAD_ADMIN){
+        cerrarSesionAdmin();
+        return;
+    }
+    const restante=TIEMPO_INACTIVIDAD_ADMIN-(Date.now()-ultimaActividad);
+    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
+    temporizadorInactividadAdmin=setTimeout(comprobarInactividadAdmin,restante);
+}
+
+function registrarActividadAdmin(){
+    if(!sessionStorage.getItem("tokenAdmin"))return;
+    sessionStorage.setItem("ultimaActividadAdmin",String(Date.now()));
+    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
+    temporizadorInactividadAdmin=setTimeout(comprobarInactividadAdmin,TIEMPO_INACTIVIDAD_ADMIN);
+}
+
+["click","keydown","touchstart"].forEach(function(evento){
+    document.addEventListener(evento,registrarActividadAdmin,{passive:true});
+});
+
 if(sessionStorage.getItem("tokenAdmin")){
-    mostrarPanelAdmin();
+    comprobarInactividadAdmin();
+    if(sessionStorage.getItem("tokenAdmin"))mostrarPanelAdmin();
 }else{
     mostrarAccesoAdmin();
 }
@@ -119,6 +156,8 @@ function ingresarAdmin(){
     .then(function(resultado){
         if(resultado.autorizado){
             sessionStorage.setItem("tokenAdmin",resultado.token);
+            sessionStorage.setItem("ultimaActividadAdmin",String(Date.now()));
+            registrarActividadAdmin();
             mostrarPanelAdmin();
             document.getElementById("claveAdmin").value="";
             mensaje.textContent="";
