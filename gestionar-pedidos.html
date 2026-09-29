@@ -937,19 +937,8 @@ function verPedido(indice){
     html +=
         "<div class='seccion'>" +
         "<h3>👮 Verificación policial</h3>" +
-        "<div class='control-verificacion'>" +
-            "<p style='margin-top:0;'>" +
-                "Verifica la condición policial antes de registrar este C.I. como beneficiario." +
-            "</p>" +
-            "<button " +
-                "type='button' " +
-                "id='btnVerificarPolicia' " +
-                "class='btn-verificar-policia' " +
-                "onclick='verificarClientePolicial(" +
-                    JSON.stringify(String(p.id_pedido || "")) +
-                ")'>" +
-                "👮 VERIFICAR FUNCIONARIO POLICIAL" +
-            "</button>" +
+        "<div id='controlVerificacionPolicial' class='control-verificacion'>" +
+            "<p style='margin:0;'>Consultando estado de verificación del C.I...</p>" +
         "</div>" +
         "</div>";
 
@@ -1003,6 +992,7 @@ function verPedido(indice){
     .getElementById("modalPedido")
     .style.display = "block";
 
+    consultarVerificacionPolicialPedido(p);
 }
 
 function opcionEstado(valor, estadoActual){
@@ -1139,6 +1129,46 @@ function guardarEstadoPedido(idPedido){
     });
 }
 
+function consultarVerificacionPolicialPedido(p){
+    const contenedor=document.getElementById("controlVerificacionPolicial");
+    if(!contenedor) return;
+
+    const ci=String((p&&p.ci)||"").trim();
+    if(!ci){
+        contenedor.innerHTML="<p style='margin:0;'>Este pedido no tiene C.I. registrado.</p>";
+        return;
+    }
+
+    const datos=new URLSearchParams();
+    datos.append("accion","consultarClientePolicial");
+    datos.append("ci",ci);
+
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(resultado.ok&&resultado.verificado){
+            contenedor.innerHTML=
+                "<p style='margin:0;line-height:1.5;'><strong>✅ FUNCIONARIO POLICIAL VERIFICADO</strong><br>"+
+                "C.I.: "+escapar(ci)+"<br>"+
+                "Beneficio policial activo"+
+                (Number(resultado.porcentaje)>0 ? " · Descuento: "+escapar(resultado.porcentaje)+"%" : "")+
+                "</p>";
+            return;
+        }
+
+        contenedor.innerHTML=
+            "<p style='margin-top:0;'>Verifica la condición policial antes de registrar este C.I. como beneficiario.</p>"+
+            "<button type='button' id='btnVerificarPolicia' class='btn-verificar-policia' onclick='verificarClientePolicial("+
+            JSON.stringify(String((p&&p.id_pedido)||""))+
+            ")'>👮 VERIFICAR FUNCIONARIO POLICIAL</button>";
+    })
+    .catch(function(error){
+        console.error(error);
+        contenedor.innerHTML=
+            "<p style='margin:0;'>⚠️ No se pudo consultar la verificación policial en este momento.</p>";
+    });
+}
+
 function verificarClientePolicial(idPedido){
 
     if(!idPedido){
@@ -1216,7 +1246,12 @@ function verificarClientePolicial(idPedido){
             "Nombre: " + (resultado.nombre || "")
         );
 
-        if(boton){
+        const pedidoActual=pedidosCargados.find(function(item){
+            return String(item.id_pedido||"")===String(idPedido||"");
+        });
+        if(pedidoActual){
+            consultarVerificacionPolicialPedido(pedidoActual);
+        }else if(boton){
             boton.disabled = true;
             boton.textContent = "✅ FUNCIONARIO VERIFICADO";
         }
