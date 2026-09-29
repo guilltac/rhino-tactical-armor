@@ -296,6 +296,9 @@ td{
     color:white;
     width:100%;
 }
+.control-postventa{background:#eef3f7;border:1px solid #a9b7c4;border-radius:8px;padding:16px;margin-top:12px;}
+.btn-reactivar{background:#315f24;color:white;width:100%;}
+.btn-devolucion{background:#8a5d14;color:white;width:100%;}
 .aviso-pago{
     margin:0 0 10px;
     line-height:1.5;
@@ -813,6 +816,24 @@ function verPedido(indice){
 
     html += "</div>";
 
+    const pedidoCancelado=String(p.estado_pedido||"").toUpperCase().includes("CANCEL");
+    const pagoConfirmadoPost=["PAGO CONFIRMADO","PAGADO","CONFIRMADO"].includes(estadoPagoActual);
+    const estadoDevolucion=String(p.estado_devolucion||"").toUpperCase();
+    const solicitudReactivacion=String(p.solicitud_reactivacion||"").toUpperCase();
+    const tieneQrDevolucion=!!String(p.qr_devolucion||"").trim();
+
+    if(pedidoCancelado&&pagoConfirmadoPost){
+        html+="<div class='seccion'><h3>↩️ Postventa: cancelación pagada</h3><div class='control-postventa'>"+
+        "<p style='margin-top:0;line-height:1.5;'><strong>⚠️ Pedido cancelado después de confirmar el pago.</strong><br>El pago se conserva en el historial. Gestiona aquí la reactivación o devolución.</p>"+
+        "<div class='datos'>"+dato("Estado devolución",p.estado_devolucion)+dato("Fecha solicitud devolución",formatearFecha(p.fecha_solicitud_devolucion))+dato("Fecha devolución",formatearFecha(p.fecha_devolucion))+dato("Solicitud reactivación",p.solicitud_reactivacion)+dato("Fecha solicitud reactivación",formatearFecha(p.fecha_solicitud_reactivacion))+dato("Fecha reactivación",formatearFecha(p.fecha_reactivacion))+"</div>";
+        if(tieneQrDevolucion) html+="<a class='btn-comprobante' href='"+escaparAtributoURL(p.qr_devolucion)+"' target='_blank' rel='noopener noreferrer'>👁 VER QR DE DEVOLUCIÓN</a>";
+        if(solicitudReactivacion==="SOLICITADA") html+="<div class='acciones-pago'><button type='button' id='btnAprobarReactivacion' class='btn-reactivar' onclick='aprobarReactivacionPedido("+JSON.stringify(String(p.id_pedido||""))+")'>🔄 APROBAR REACTIVACIÓN</button></div>";
+        if(tieneQrDevolucion&&!estadoDevolucion.includes("REALIZADA")) html+="<div class='acciones-pago'><button type='button' id='btnDevolucionRealizada' class='btn-devolucion' onclick='marcarDevolucionRealizada("+JSON.stringify(String(p.id_pedido||""))+")'>💰 MARCAR DEVOLUCIÓN REALIZADA</button></div>";
+        if(estadoDevolucion.includes("REALIZADA")) html+="<p style='margin:12px 0 0;'><strong>✅ DEVOLUCIÓN REALIZADA</strong></p>";
+        else if(solicitudReactivacion!=="SOLICITADA"&&!tieneQrDevolucion) html+="<p style='margin:12px 0 0;'>⏳ Esperando que el cliente elija entre reactivación o devolución desde SEGUIR MI PEDIDO.</p>";
+        html+="</div></div>";
+    }
+
     html +=
         "<div class='seccion'>" +
         "<h3>🚚 Pedido y entrega</h3>" +
@@ -1017,11 +1038,14 @@ function guardarEstadoPedido(idPedido){
     const nuevoEstado =
         selector.value;
 
-    if(!confirm(
-        "¿Guardar el estado \"" +
-        nuevoEstado +
-        "\" para este pedido?"
-    )){
+    const pedidoActual=pedidosCargados.find(function(item){return String(item.id_pedido||"")===String(idPedido||"");});
+    const estadoPagoCancelacion=String((pedidoActual&&pedidoActual.estado_pago)||"").toUpperCase().trim();
+    const pagoConfirmadoCancelacion=["PAGO CONFIRMADO","PAGADO","CONFIRMADO"].includes(estadoPagoCancelacion);
+
+    if(nuevoEstado==="CANCELADO"&&pagoConfirmadoCancelacion){
+        const totalPedido=formatearDinero(pedidoActual.total_a_cobrar);
+        if(!confirm("⚠️ ATENCIÓN: ESTE PEDIDO TIENE UN PAGO CONFIRMADO.\n\nPedido: "+idPedido+"\nTotal registrado: "+totalPedido+"\n\nSi lo cancelas, el pago NO se borrará y se abrirá el proceso de REACTIVACIÓN O DEVOLUCIÓN para el cliente.\n\n¿Deseas continuar?")) return;
+    }else if(!confirm("¿Guardar el estado \""+nuevoEstado+"\" para este pedido?")){
         return;
     }
 
@@ -1344,6 +1368,44 @@ function enviarAvisoWhatsApp(indice){
 
     mensaje += "\n\nRHINO TACTICAL ARMOR\nPROTECCIÓN · RESISTENCIA · CONFIANZA";
     window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+}
+
+function ejecutarAccionPostventa(accion,idPedido,mensajeConfirmacion){
+    if(!idPedido||!confirm(mensajeConfirmacion)) return;
+    const b1=document.getElementById("btnAprobarReactivacion");
+    const b2=document.getElementById("btnDevolucionRealizada");
+    if(b1)b1.disabled=true;
+    if(b2)b2.disabled=true;
+    const datos=new URLSearchParams();
+    datos.append("accion",accion);
+    datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
+    datos.append("id_pedido",idPedido);
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(r){return r.json();})
+    .then(function(resultado){
+        if(!resultado.autorizado){
+            sessionStorage.removeItem("tokenAdmin");
+            alert(resultado.mensaje||"La sesión administrativa venció.");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok) throw new Error(resultado.mensaje||"No se pudo completar la operación.");
+        alert("✅ "+(resultado.mensaje||"Operación realizada correctamente."));
+        cerrarPedido();
+        cargarPedidos();
+    })
+    .catch(function(error){
+        console.error(error);
+        alert("❌ "+error.message);
+        if(b1)b1.disabled=false;
+        if(b2)b2.disabled=false;
+    });
+}
+function aprobarReactivacionPedido(idPedido){
+    ejecutarAccionPostventa("aprobarReactivacionPedido",idPedido,"¿Aprobar la reactivación del pedido "+idPedido+"?\n\nEl sistema intentará descontar nuevamente el stock y devolverá el pedido a PEDIDO RECIBIDO.");
+}
+function marcarDevolucionRealizada(idPedido){
+    ejecutarAccionPostventa("marcarDevolucionRealizada",idPedido,"¿Confirmas que la devolución del dinero YA FUE REALIZADA realmente al QR del cliente?\n\nPedido: "+idPedido);
 }
 
 function cerrarPedido(){
