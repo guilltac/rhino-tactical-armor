@@ -1912,6 +1912,34 @@ Cargando productos...
 </div>
 
 <!-- =========================
+     INFORMACIÓN ZONA DE RELEVO MÓVIL
+========================= -->
+<div id="modalInfoRelevoMovil" class="modal" style="z-index:2100;">
+    <div class="modal-content" style="max-width:430px;max-height:88vh;overflow-y:auto;">
+        <div class="modal-header">
+            <h2>♻️ ZONA DE RELEVO</h2>
+            <button class="close" onclick="cerrarInfoRelevoMovil()">×</button>
+        </div>
+        <div style="padding:4px 2px 8px;">
+            <p style="color:#7ddd42;font-weight:bold;line-height:1.4;margin-bottom:10px;">¿TIENES EQUIPO QUE YA NO UTILIZAS? DALE UNA NUEVA MISIÓN.</p>
+            <p style="color:#bbb;line-height:1.5;">RHINO TACTICAL ARMOR te ofrece una alternativa para dar una nueva misión a equipo táctico, uniformes y accesorios en condiciones de reutilización.</p>
+            <div class="relevo-options">
+                <div class="relevo-option">
+                    <h3>💰 VÉNDENOS TU EQUIPO</h3>
+                    <p>Ofrece tu equipo directamente a RHINO. Revisaremos la información y, si existe interés, podremos realizarte una propuesta.</p>
+                </div>
+                <div class="relevo-option">
+                    <h3>🏷️ VENDE CON NOSOTROS</h3>
+                    <p>Solicita que RHINO evalúe tu producto para publicarlo en la Zona de Relevo. La publicación estará sujeta a revisión previa.</p>
+                </div>
+            </div>
+            <button class="relevo-action" onclick="continuarFormularioRelevoMovil()">♻️ QUIERO DARLE UNA NUEVA MISIÓN A MI EQUIPO</button>
+            <p class="relevo-aviso">Las solicitudes no se publican automáticamente. Todo artículo será revisado antes de ser aceptado o publicado.</p>
+        </div>
+    </div>
+</div>
+
+<!-- =========================
      MODAL DETALLES PRODUCTO
 ========================= -->
 
@@ -3619,6 +3647,16 @@ function usarMiUbicacion(){
 /* =========================
    ZONA DE RELEVO
 ========================= */
+function abrirInfoRelevoMovil(){
+    document.getElementById("modalInfoRelevoMovil").style.display="flex";
+}
+function cerrarInfoRelevoMovil(){
+    document.getElementById("modalInfoRelevoMovil").style.display="none";
+}
+function continuarFormularioRelevoMovil(){
+    cerrarInfoRelevoMovil();
+    abrirRelevo();
+}
 function abrirRelevo(){
     document.getElementById("modalRelevo").style.display="flex";
 }
@@ -3677,7 +3715,7 @@ cargarProductos();
      RHINO - BARRA INFERIOR MÓVIL
 ========================= -->
 <div class="rhino-mobile-bottom">
-    <button type="button" class="rhino-mobile-relevo" onclick="abrirRelevo()">
+    <button type="button" class="rhino-mobile-relevo" onclick="abrirInfoRelevoMovil()">
         <span class="rhino-mobile-relevo-icon">♻️</span>
         <span class="rhino-mobile-relevo-text">
             <strong>ZONA DE RELEVO <span style="color:#fff;">— DALE UNA NUEVA MISIÓN</span></strong>
