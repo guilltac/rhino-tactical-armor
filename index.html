@@ -3214,6 +3214,9 @@ function enviarPedido(){
     // El ID definitivo lo genera Apps Script.
     datosPedido.append("fecha_pedido",fechaPedido);
     datosPedido.append("cliente",cliente);
+    datosPedido.append("nombres",nombre);
+    datosPedido.append("apellido_paterno",apellidoPaterno);
+    datosPedido.append("apellido_materno",apellidoMaterno);
     datosPedido.append("telefono",telefono);
     datosPedido.append("ci",ci);
     datosPedido.append("departamento",departamento);
@@ -3313,8 +3316,17 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
             '<img src="qr-bisa.jpeg" alt="QR Banco BISA" style="width:min(100%,420px);height:auto;background:#fff;border-radius:6px;">'+
             '<p style="margin-top:12px;"><strong>Monto a pagar: Bs '+total.toFixed(2)+'</strong></p>'+
             '<p>Código de pedido: <strong>'+idPedido+'</strong></p>'+
+            '<div style="margin-top:14px;padding:12px;border:1px solid #5bb42d;border-radius:7px;background:#101511;text-align:left;">'+
+            '<strong style="color:#7ddd42;">IMPORTANTE — CONFIRMACIÓN DE PAGO</strong>'+
+            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar el pago, envía el <strong>comprobante, descargo de depósito o captura de pantalla</strong> al WhatsApp <strong>73272204</strong>, indicando tu código de pedido <strong>'+idPedido+'</strong>. Tu pago será verificado antes de continuar con la preparación del pedido.</p>'+
+            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>'+
+            '</div>'+
             '<p style="margin-top:8px;color:#bbb;">El pedido permanecerá PENDIENTE DE PAGO hasta verificar el pago.</p>'+
             '</div>';
+        setTimeout(function(){
+            const boton=document.getElementById("btnComprobantePago");
+            if(boton) boton.onclick=function(){enviarComprobanteWhatsapp(idPedido,total,"QR");};
+        },0);
     }else if(pago==="Transferencia bancaria"){
         datosPago.innerHTML=
             '<div style="border:1px solid #344235;border-radius:8px;padding:15px;">'+
@@ -3323,8 +3335,17 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
             '<hr style="border:0;border-top:1px solid #344235;margin:14px 0;">'+
             '<p><strong>BANCO UNIÓN</strong><br>Cuenta Nº 10000021984310<br>Titular: ALVARO RAUL JIMENEZ ESPINOZA</p>'+
             '<p style="margin-top:14px;"><strong>Monto a pagar: Bs '+total.toFixed(2)+'</strong><br>Referencia del pedido: <strong>'+idPedido+'</strong></p>'+
+            '<div style="margin-top:14px;padding:12px;border:1px solid #5bb42d;border-radius:7px;background:#101511;">'+
+            '<strong style="color:#7ddd42;">IMPORTANTE — CONFIRMACIÓN DE PAGO</strong>'+
+            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar la transferencia, envía el <strong>comprobante, descargo de depósito o captura de pantalla</strong> al WhatsApp <strong>73272204</strong>, indicando tu código de pedido <strong>'+idPedido+'</strong>. Tu pago será verificado antes de continuar con la preparación del pedido.</p>'+
+            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>'+
+            '</div>'+
             '<p style="margin-top:8px;color:#bbb;">El pedido permanecerá PENDIENTE DE PAGO hasta verificar la transferencia.</p>'+
             '</div>';
+        setTimeout(function(){
+            const boton=document.getElementById("btnComprobantePago");
+            if(boton) boton.onclick=function(){enviarComprobanteWhatsapp(idPedido,total,"Transferencia bancaria");};
+        },0);
     }else{
         datosPago.innerHTML=
             '<div style="border:1px solid #344235;border-radius:8px;padding:15px;">'+
@@ -3336,6 +3357,16 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
         window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(mensajeWhatsapp),"_blank");
     };
     document.getElementById("modalConfirmacionPedido").style.display="flex";
+}
+
+function enviarComprobanteWhatsapp(idPedido,total,metodoPago){
+    const mensaje=
+        "Hola RHINO TACTICAL ARMOR.\n\n"+
+        "Quiero enviar el comprobante de pago de mi pedido *"+idPedido+"*.\n"+
+        "Monto: *Bs "+Number(total).toFixed(2)+"*\n"+
+        "Método: *"+metodoPago+"*\n\n"+
+        "Adjunto mi comprobante de pago.";
+    window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(mensaje),"_blank");
 }
 
 function cerrarConfirmacionPedido(){
