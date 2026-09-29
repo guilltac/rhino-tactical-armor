@@ -3927,6 +3927,45 @@ function escaparHTML(valor){
         .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
         .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
+async function cambiarMetodoPagoDesdeSeguimiento(idPedido,ci,boton){
+    const opcion=prompt("Cambiar método de pago:\n\nEscribe 1 para QR\nEscribe 2 para Transferencia bancaria\n\nCancelar para mantener pago en efectivo.");
+    if(opcion===null) return;
+    const valor=String(opcion).trim();
+    let nuevoMetodo="";
+    if(valor==="1") nuevoMetodo="QR";
+    if(valor==="2") nuevoMetodo="Transferencia bancaria";
+    if(!nuevoMetodo){
+        alert("Selecciona 1 para QR o 2 para Transferencia bancaria.");
+        return;
+    }
+    if(!confirm("¿Confirmas cambiar el método de pago de EFECTIVO a "+nuevoMetodo+"?\n\nEste cambio no se puede revertir desde la tienda.")) return;
+    const textoOriginal=boton?boton.innerHTML:"";
+    if(boton){
+        boton.disabled=true;
+        boton.innerHTML="ACTUALIZANDO...";
+    }
+    try{
+        const datos=new URLSearchParams();
+        datos.append("accion","cambiarMetodoPagoCliente");
+        datos.append("id_pedido",idPedido);
+        datos.append("ci",ci);
+        datos.append("nuevo_metodo",nuevoMetodo);
+        const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:datos});
+        if(!respuesta.ok) throw new Error("Error HTTP: "+respuesta.status);
+        const resultado=await respuesta.json();
+        if(!resultado.ok) throw new Error(resultado.mensaje||"No se pudo cambiar el método de pago.");
+        alert("✅ "+(resultado.mensaje||"Método de pago actualizado correctamente."));
+        consultarSeguimientoPedido();
+    }catch(error){
+        console.error("Error al cambiar método de pago:",error);
+        alert("❌ "+error.message);
+        if(boton){
+            boton.disabled=false;
+            boton.innerHTML=textoOriginal;
+        }
+    }
+}
+
 function consultarSeguimientoPedido(){
     let pedido=document.getElementById("seguimientoPedido").value.trim().toUpperCase().replace(/\s+/g,"");
     const ci=document.getElementById("seguimientoCI").value.trim();
@@ -4008,7 +4047,9 @@ function consultarSeguimientoPedido(){
             const metodoNormalizado=String(metodo||"").toUpperCase().trim();
             const esEfectivo=metodoNormalizado==="EFECTIVO"||metodoNormalizado.includes("EFECTIVO");
             if(esEfectivo){
-                html+='<div style="margin-top:12px;padding:12px;border:1px solid #c58b24;border-radius:7px;background:#2a2418;"><b>💵 PAGO EN EFECTIVO</b><br>Este pedido fue registrado para pago en efectivo. No necesitas cargar comprobante. RHINO confirmará el pago al momento del cobro o entrega correspondiente.</div>';
+                html+='<div style="margin-top:12px;padding:12px;border:1px solid #c58b24;border-radius:7px;background:#2a2418;"><b>💵 PAGO EN EFECTIVO</b><br>Este pedido fue registrado para pago en efectivo. No necesitas cargar comprobante. RHINO confirmará el pago al momento del cobro o entrega correspondiente.</div>'+
+                    '<button type="button" class="checkout-button" style="margin-top:10px;background:#315f24;" onclick="cambiarMetodoPagoDesdeSeguimiento(\''+escaparHTML(id)+'\',\''+escaparHTML(ci)+'\',this)">🔄 CAMBIAR MÉTODO DE PAGO</button>'+
+                    '<div style="margin-top:8px;color:#bbb;font-size:13px;line-height:1.4;">Solo puedes cambiar de Efectivo a QR o Transferencia bancaria. El cambio no se puede revertir desde la tienda.</div>';
             }else{
                 html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="seleccionarComprobantePago(\''+
                     escaparHTML(id)+'\',\''+escaparHTML(ci)+'\',this)">📎 CARGAR COMPROBANTE DE PAGO</button>';
