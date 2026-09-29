@@ -1923,14 +1923,14 @@ Cargando productos...
         <div style="padding:4px 2px 8px;">
             <p style="color:#7ddd42;font-weight:bold;line-height:1.4;margin-bottom:10px;">¿TIENES EQUIPO QUE YA NO UTILIZAS? DALE UNA NUEVA MISIÓN.</p>
             <p style="color:#bbb;line-height:1.5;">RHINO TACTICAL ARMOR te ofrece una alternativa para dar una nueva misión a equipo táctico, uniformes y accesorios en condiciones de reutilización.</p>
-            <div class="relevo-options">
-                <div class="relevo-option">
-                    <h3>💰 VÉNDENOS TU EQUIPO</h3>
-                    <p>Ofrece tu equipo directamente a RHINO. Revisaremos la información y, si existe interés, podremos realizarte una propuesta.</p>
+            <div style="display:block!important;margin:14px 0;">
+                <div style="display:block!important;background:#101511;border:1px solid #344235;border-radius:8px;padding:12px;margin-bottom:10px;">
+                    <h3 style="display:block!important;color:#fff;font-size:14px;margin:0 0 6px;">💰 VÉNDENOS TU EQUIPO</h3>
+                    <p style="display:block!important;color:#bbb;font-size:13px;line-height:1.45;margin:0;">Ofrece tu equipo directamente a RHINO. Revisaremos la información y, si existe interés, podremos realizarte una propuesta.</p>
                 </div>
-                <div class="relevo-option">
-                    <h3>🏷️ VENDE CON NOSOTROS</h3>
-                    <p>Solicita que RHINO evalúe tu producto para publicarlo en la Zona de Relevo. La publicación estará sujeta a revisión previa.</p>
+                <div style="display:block!important;background:#101511;border:1px solid #344235;border-radius:8px;padding:12px;margin-bottom:10px;">
+                    <h3 style="display:block!important;color:#fff;font-size:14px;margin:0 0 6px;">🏷️ VENDE CON NOSOTROS</h3>
+                    <p style="display:block!important;color:#bbb;font-size:13px;line-height:1.45;margin:0;">Solicita que RHINO evalúe tu producto para publicarlo en la Zona de Relevo. La publicación estará sujeta a revisión previa.</p>
                 </div>
             </div>
             <button class="relevo-action" onclick="continuarFormularioRelevoMovil()">♻️ QUIERO DARLE UNA NUEVA MISIÓN A MI EQUIPO</button>
@@ -3708,6 +3708,21 @@ function prepararSolicitudRelevo(){
 
 cargarProductos();
 
+
+
+/* Actualización automática del catálogo y stock */
+let actualizandoStockAutomatico=false;
+setInterval(async function(){
+    if(document.hidden||actualizandoStockAutomatico) return;
+    actualizandoStockAutomatico=true;
+    try{
+        await cargarProductos();
+    }catch(error){
+        console.warn("No se pudo actualizar el stock automáticamente:",error);
+    }finally{
+        actualizandoStockAutomatico=false;
+    }
+},30000);
 </script>
 
 
