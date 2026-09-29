@@ -1202,7 +1202,28 @@ header{
 
 .cart-button:hover{
     background:#25491d;
-}  
+}
+.track-button{
+    background:#101511;
+    color:#fff;
+    border:1px solid #5cb631;
+    padding:12px 15px;
+    border-radius:6px;
+    white-space:nowrap;
+    font-weight:bold;
+    cursor:pointer;
+}
+.track-button:hover{background:#25491d;}
+.track-result{
+    margin-top:16px;
+    padding:14px;
+    border:1px solid #344235;
+    border-radius:8px;
+    background:#101511;
+    line-height:1.65;
+}
+.track-result strong{color:#7ddd42;}
+
 
 /* =========================
    BANNER RHINO
@@ -1287,12 +1308,13 @@ header{
         width:100%;
         display:flex;
         flex-direction:row;
+        flex-wrap:wrap;
         gap:8px;
     }
 
     .search-box{
-        flex:1;
-        width:auto;
+        flex:0 0 100%;
+        width:100%;
         height:42px;
     }
 
@@ -1306,10 +1328,12 @@ header{
         width:42px;
     }
 
-    .cart-button{
-        flex-shrink:0;
-        padding:9px 11px;
-        font-size:12px;
+    .track-button,.cart-button{
+        flex:1 1 calc(50% - 4px);
+        min-width:0;
+        padding:10px 6px;
+        font-size:11px;
+        text-align:center;
     }
 
     /* Banner */
@@ -1671,6 +1695,7 @@ header{
                 <span>⌕</span>
             </div>
 
+            <button class="track-button" onclick="abrirSeguimiento()">📦 SEGUIR MI PEDIDO</button>
             <button
                 class="cart-button"
                 onclick="abrirCarrito()"
@@ -1936,6 +1961,28 @@ Cargando productos...
             <button class="relevo-action" onclick="continuarFormularioRelevoMovil()">♻️ QUIERO DARLE UNA NUEVA MISIÓN A MI EQUIPO</button>
             <p class="relevo-aviso">Las solicitudes no se publican automáticamente. Todo artículo será revisado antes de ser aceptado o publicado.</p>
         </div>
+    </div>
+</div>
+
+<!-- =========================
+     MODAL SEGUIMIENTO DE PEDIDO
+========================= -->
+<div id="modalSeguimiento" class="modal">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h2>📦 SEGUIR MI PEDIDO</h2>
+            <button class="close" onclick="cerrarSeguimiento()">×</button>
+        </div>
+        <div class="form-group">
+            <label>N.º de pedido</label>
+            <input type="text" id="seguimientoPedido" placeholder="Ej.: RTA-0007" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')">
+        </div>
+        <div class="form-group">
+            <label>C.I.</label>
+            <input type="text" id="seguimientoCI" inputmode="numeric" placeholder="Ingrese su C.I." oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+        <button id="btnConsultarSeguimiento" class="checkout-button" onclick="consultarSeguimientoPedido()">🔎 CONSULTAR PEDIDO</button>
+        <div id="resultadoSeguimiento"></div>
     </div>
 </div>
 
@@ -3700,6 +3747,79 @@ function prepararSolicitudRelevo(){
         "✅ Declaro que el equipo ofrecido es de mi propiedad y que estoy autorizado para disponer de él.\n\n"+
         "📌 *Estado:* PENDIENTE DE REVISIÓN";
     window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(mensaje),"_blank");
+}
+
+/* =========================
+   SEGUIMIENTO DE PEDIDO
+========================= */
+function abrirSeguimiento(){
+    document.getElementById("modalSeguimiento").style.display="flex";
+}
+function cerrarSeguimiento(){
+    document.getElementById("modalSeguimiento").style.display="none";
+}
+function escaparHTML(valor){
+    return String(valor==null?"":valor)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+function consultarSeguimientoPedido(){
+    const pedido=document.getElementById("seguimientoPedido").value.trim().toUpperCase();
+    const ci=document.getElementById("seguimientoCI").value.trim();
+    const resultado=document.getElementById("resultadoSeguimiento");
+    const boton=document.getElementById("btnConsultarSeguimiento");
+    if(!pedido||!ci){
+        alert("Ingresa el número de pedido y tu C.I.");
+        return;
+    }
+    resultado.innerHTML='<div class="track-result">Consultando pedido...</div>';
+    boton.disabled=true;
+    const datos=new URLSearchParams();
+    datos.append("accion","consultarPedidoCliente");
+    datos.append("id_pedido",pedido);
+    datos.append("ci",ci);
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){
+        if(!respuesta.ok) throw new Error("Error HTTP: "+respuesta.status);
+        return respuesta.json();
+    })
+    .then(function(r){
+        if(r.ok===false||r.encontrado===false){
+            resultado.innerHTML='<div class="track-result">❌ '+escaparHTML(r.mensaje||"No se encontró un pedido que coincida con esos datos.")+'</div>';
+            return;
+        }
+        const p=r.pedido||r;
+        const id=p.id_pedido||p.id||pedido;
+        const estadoPago=p.estado_pago||p.estadoPago||"PENDIENTE";
+        const estadoPedido=p.estado_pedido||p.estadoPedido||"PEDIDO RECIBIDO";
+        const productos=p.productos||"";
+        const total=Number(p.total_a_cobrar!=null?p.total_a_cobrar:(p.total!=null?p.total:0));
+        const metodo=p.metodo_pago||p.metodoPago||"";
+        const entrega=p.tipo_entrega||p.tipoEntrega||"";
+        const transportadora=p.transportadora||"";
+        const guia=p.numero_guia||p.numeroGuia||"";
+        let html='<div class="track-result">'+
+            '<div style="font-size:18px;margin-bottom:8px;"><strong>'+escaparHTML(id)+'</strong></div>'+
+            '<div><b>Estado del pedido:</b> '+escaparHTML(estadoPedido)+'</div>'+
+            '<div><b>Estado del pago:</b> '+escaparHTML(estadoPago)+'</div>'+
+            (productos?'<div style="margin-top:8px;"><b>Productos:</b><br>'+escaparHTML(productos)+'</div>':'')+
+            (total?'<div style="margin-top:8px;"><b>Total:</b> Bs '+total.toFixed(2)+'</div>':'')+
+            (metodo?'<div><b>Método de pago:</b> '+escaparHTML(metodo)+'</div>':'')+
+            (entrega?'<div><b>Entrega:</b> '+escaparHTML(entrega)+'</div>':'')+
+            (transportadora?'<div><b>Transportadora:</b> '+escaparHTML(transportadora)+'</div>':'')+
+            (guia?'<div><b>N.º de guía:</b> '+escaparHTML(guia)+'</div>':'');
+        if(String(estadoPago).toUpperCase().includes("PENDIENTE")||String(estadoPago).toUpperCase().includes("VERIFIC")){
+            html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="enviarComprobanteWhatsapp(\''+
+                escaparHTML(id)+'\','+Number(total||0)+',\''+escaparHTML(metodo||"Pago")+'\')">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>';
+        }
+        html+='</div>';
+        resultado.innerHTML=html;
+    })
+    .catch(function(error){
+        console.error("Error al consultar pedido:",error);
+        resultado.innerHTML='<div class="track-result">❌ No fue posible consultar el pedido en este momento. Intenta nuevamente.</div>';
+    })
+    .finally(function(){boton.disabled=false;});
 }
 
 /* =========================
