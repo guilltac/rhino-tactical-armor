@@ -1132,40 +1132,75 @@ function guardarEstadoPedido(idPedido){
 function consultarVerificacionPolicialPedido(p){
     const contenedor=document.getElementById("controlVerificacionPolicial");
     if(!contenedor) return;
-
     const ci=String((p&&p.ci)||"").trim();
     if(!ci){
         contenedor.innerHTML="<p style='margin:0;'>Este pedido no tiene C.I. registrado.</p>";
         return;
     }
-
     const datos=new URLSearchParams();
     datos.append("accion","consultarClientePolicial");
     datos.append("ci",ci);
-
     fetch(URL_SERVIDOR,{method:"POST",body:datos})
     .then(function(respuesta){return respuesta.json();})
     .then(function(resultado){
         if(resultado.ok&&resultado.verificado){
             contenedor.innerHTML=
-                "<p style='margin:0;line-height:1.5;'><strong>✅ FUNCIONARIO POLICIAL VERIFICADO</strong><br>"+
-                "C.I.: "+escapar(ci)+"<br>"+
-                "Beneficio policial activo"+
-                (Number(resultado.porcentaje)>0 ? " · Descuento: "+escapar(resultado.porcentaje)+"%" : "")+
-                "</p>";
+                "<p style='margin:0 0 12px;line-height:1.5;'><strong>✅ FUNCIONARIO POLICIAL VERIFICADO</strong><br>"+
+                "C.I.: "+escapar(ci)+"<br>Beneficio policial activo"+
+                (Number(resultado.porcentaje)>0?" · Descuento: "+escapar(resultado.porcentaje)+"%":"")+"</p>"+
+                "<button type='button' class='btn-cancelar' onclick='cambiarEstadoBeneficioPolicial("+JSON.stringify(ci)+","+JSON.stringify("INACTIVO")+")'>🚫 QUITAR BENEFICIO POLICIAL</button>";
             return;
         }
-
+        if(resultado.ok&&resultado.inactivo){
+            contenedor.innerHTML=
+                "<p style='margin:0 0 12px;line-height:1.5;'><strong>🚫 BENEFICIO POLICIAL INACTIVO</strong><br>Lo sentimos, por el momento el beneficio policial no está activado.</p>"+
+                "<button type='button' class='btn-guardar' onclick='cambiarEstadoBeneficioPolicial("+JSON.stringify(ci)+","+JSON.stringify("VERIFICADO")+")'>♻️ REACTIVAR BENEFICIO POLICIAL</button>";
+            return;
+        }
         contenedor.innerHTML=
             "<p style='margin-top:0;'>Verifica la condición policial antes de registrar este C.I. como beneficiario.</p>"+
-            "<button type='button' id='btnVerificarPolicia' class='btn-verificar-policia' onclick='verificarClientePolicial("+
-            JSON.stringify(String((p&&p.id_pedido)||""))+
-            ")'>👮 VERIFICAR FUNCIONARIO POLICIAL</button>";
+            "<button type='button' id='btnVerificarPolicia' class='btn-verificar-policia' onclick='verificarClientePolicial("+JSON.stringify(String((p&&p.id_pedido)||""))+")'>👮 VERIFICAR FUNCIONARIO POLICIAL</button>";
     })
     .catch(function(error){
         console.error(error);
-        contenedor.innerHTML=
-            "<p style='margin:0;'>⚠️ No se pudo consultar la verificación policial en este momento.</p>";
+        contenedor.innerHTML="<p style='margin:0;'>⚠️ No se pudo consultar la verificación policial en este momento.</p>";
+    });
+}
+
+function cambiarEstadoBeneficioPolicial(ci,estado){
+    const activar=String(estado||"").toUpperCase()==="VERIFICADO";
+    const pregunta=activar?"¿Reactivar el beneficio policial para este cliente?":"¿Quitar el beneficio policial para este cliente? Las compras futuras ya no recibirán el descuento policial.";
+    if(!confirm(pregunta)) return;
+    const token=sessionStorage.getItem("tokenAdmin");
+    if(!token){
+        alert("La sesión administrativa venció. Inicia sesión nuevamente.");
+        window.location.replace("admin.html");
+        return;
+    }
+    const datos=new URLSearchParams();
+    datos.append("accion","cambiarEstadoBeneficioPolicial");
+    datos.append("tokenAdmin",token);
+    datos.append("ci",String(ci||""));
+    datos.append("estado",String(estado||""));
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(resultado.autorizado===false){
+            alert(resultado.mensaje||"Sesión administrativa vencida.");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok){
+            alert(resultado.mensaje||"No se pudo actualizar el beneficio policial.");
+            return;
+        }
+        alert(resultado.mensaje);
+        const pedidoActual=pedidosCargados.find(function(item){return String(item.ci||"").trim()===String(ci||"").trim();});
+        if(pedidoActual) consultarVerificacionPolicialPedido(pedidoActual);
+    })
+    .catch(function(error){
+        console.error(error);
+        alert("No se pudo conectar con el servidor.");
     });
 }
 
