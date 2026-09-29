@@ -606,12 +606,11 @@ Fotografía adicional 5
 ></div>
 
 <button
+id="btnGuardarProducto"
 type="button"
-onclick="guardarProducto()"
+onclick="bloquearYGuardarProducto(this)"
 >
-
 Guardar producto
-
 </button>
 
 <div
@@ -998,6 +997,27 @@ encodeURIComponent(
 
 }
     
+let guardandoProducto=false;
+
+async function bloquearYGuardarProducto(boton){
+    if(guardandoProducto)return;
+    guardandoProducto=true;
+    boton.disabled=true;
+    boton.textContent="⏳ Guardando producto...";
+    boton.style.opacity=".65";
+    boton.style.cursor="not-allowed";
+
+    try{
+        await guardarProducto();
+    }finally{
+        guardandoProducto=false;
+        boton.disabled=false;
+        boton.textContent="Guardar producto";
+        boton.style.opacity="";
+        boton.style.cursor="";
+    }
+}
+
 async function guardarProducto(){
 
     const nombre =
@@ -1277,11 +1297,23 @@ if(foto5){
         });
 
         const texto=await respuesta.text();
-        let resultado;
+        let resultado=null;
+
         try{
             resultado=JSON.parse(texto);
         }catch(e){
-            throw new Error(texto||"Respuesta no válida del servidor.");
+            const pareceHtml=/^\s*<!doctype html|^\s*<html/i.test(texto);
+            if(pareceHtml){
+                mensaje.innerHTML =
+                    "⚠️ EL SERVIDOR RECIBIÓ LA SOLICITUD, PERO NO DEVOLVIÓ UNA CONFIRMACIÓN VÁLIDA.<br><br>" +
+                    "Para evitar duplicar el producto, <strong>no vuelvas a pulsar Guardar</strong>.<br>" +
+                    "Revisa primero la lista de productos o la hoja de datos.";
+                mensaje.style.display="block";
+                mensaje.style.background="#fff3cd";
+                mensaje.style.color="#7a5a00";
+                return;
+            }
+            throw new Error("Respuesta no válida del servidor.");
         }
 
         if(resultado.autorizado===false){
@@ -1293,6 +1325,8 @@ if(foto5){
             throw new Error(resultado.mensaje||"No se pudo guardar el producto.");
         }
 
+        mensaje.style.background="";
+        mensaje.style.color="";
         mensaje.innerHTML =
             "✅ PRODUCTO REGISTRADO CORRECTAMENTE<br><br>" +
             "🏷️ Código asignado: <strong>" + escHtml(resultado.id) + "</strong><br>" +
