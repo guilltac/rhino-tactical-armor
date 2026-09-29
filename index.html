@@ -3356,7 +3356,7 @@ function enviarPedido(){
             porcentaje:porcentajeServidor,
             descuento:descuentoServidor,
             subtotal:parseFloat(resultado.subtotal)||subtotal
-        });
+        },ci);
     })
     .catch(function(error){
         console.error("Error al registrar pedido:",error);
@@ -3370,7 +3370,7 @@ function enviarPedido(){
     });
 }
 
-function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio){
+function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio,ciPedido){
     document.getElementById("resumenPedidoConfirmado").innerHTML=
         '<div style="line-height:1.8;">'+
         '<strong>Código de pedido:</strong> <span style="color:#7ddd42;font-size:22px;">'+idPedido+'</span><br>'+
@@ -3393,14 +3393,14 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
             '<p>Código de pedido: <strong>'+idPedido+'</strong></p>'+
             '<div style="margin-top:14px;padding:12px;border:1px solid #5bb42d;border-radius:7px;background:#101511;text-align:left;">'+
             '<strong style="color:#7ddd42;">IMPORTANTE — CONFIRMACIÓN DE PAGO</strong>'+
-            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar el pago, envía el <strong>comprobante, descargo de depósito o captura de pantalla</strong> al WhatsApp <strong>73272204</strong>, indicando tu código de pedido <strong>'+idPedido+'</strong>. Tu pago será verificado antes de continuar con la preparación del pedido.</p>'+
-            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>'+
+            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar el pago, carga aquí tu <strong>comprobante, descargo de depósito o captura de pantalla</strong>. Se aceptan JPG, JPEG, PNG, WEBP o PDF.</p>'+
+            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📎 CARGAR COMPROBANTE DE PAGO</button>'+
             '</div>'+
             '<p style="margin-top:8px;color:#bbb;">El pedido permanecerá PENDIENTE DE PAGO hasta verificar el pago.</p>'+
             '</div>';
         setTimeout(function(){
             const boton=document.getElementById("btnComprobantePago");
-            if(boton) boton.onclick=function(){enviarComprobanteWhatsapp(idPedido,total,"QR");};
+            if(boton) boton.onclick=function(){seleccionarComprobantePago(idPedido,ciPedido,boton);};
         },0);
     }else if(pago==="Transferencia bancaria"){
         datosPago.innerHTML=
@@ -3412,14 +3412,14 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
             '<p style="margin-top:14px;"><strong>Monto a pagar: Bs '+total.toFixed(2)+'</strong><br>Referencia del pedido: <strong>'+idPedido+'</strong></p>'+
             '<div style="margin-top:14px;padding:12px;border:1px solid #5bb42d;border-radius:7px;background:#101511;">'+
             '<strong style="color:#7ddd42;">IMPORTANTE — CONFIRMACIÓN DE PAGO</strong>'+
-            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar la transferencia, envía el <strong>comprobante, descargo de depósito o captura de pantalla</strong> al WhatsApp <strong>73272204</strong>, indicando tu código de pedido <strong>'+idPedido+'</strong>. Tu pago será verificado antes de continuar con la preparación del pedido.</p>'+
-            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>'+
+            '<p style="margin-top:7px;color:#ddd;line-height:1.5;">Después de realizar la transferencia, carga aquí tu <strong>comprobante, descargo de depósito o captura de pantalla</strong>. Se aceptan JPG, JPEG, PNG, WEBP o PDF.</p>'+
+            '<button type="button" id="btnComprobantePago" style="width:100%;margin-top:10px;background:#1f9d48;color:#fff;border:0;border-radius:6px;padding:12px;font-weight:bold;cursor:pointer;">📎 CARGAR COMPROBANTE DE PAGO</button>'+
             '</div>'+
             '<p style="margin-top:8px;color:#bbb;">El pedido permanecerá PENDIENTE DE PAGO hasta verificar la transferencia.</p>'+
             '</div>';
         setTimeout(function(){
             const boton=document.getElementById("btnComprobantePago");
-            if(boton) boton.onclick=function(){enviarComprobanteWhatsapp(idPedido,total,"Transferencia bancaria");};
+            if(boton) boton.onclick=function(){seleccionarComprobantePago(idPedido,ciPedido,boton);};
         },0);
     }else{
         datosPago.innerHTML=
@@ -3434,14 +3434,155 @@ function mostrarConfirmacionPedido(idPedido,total,pago,mensajeWhatsapp,beneficio
     document.getElementById("modalConfirmacionPedido").style.display="flex";
 }
 
-function enviarComprobanteWhatsapp(idPedido,total,metodoPago){
-    const mensaje=
-        "Hola RHINO TACTICAL ARMOR.\n\n"+
-        "Quiero enviar el comprobante de pago de mi pedido *"+idPedido+"*.\n"+
-        "Monto: *Bs "+Number(total).toFixed(2)+"*\n"+
-        "Método: *"+metodoPago+"*\n\n"+
-        "Adjunto mi comprobante de pago.";
-    window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(mensaje),"_blank");
+function seleccionarComprobantePago(idPedido,ci,botonOrigen){
+    if(!idPedido||!ci){
+        alert("No se pudo identificar el pedido o el C.I. del cliente.");
+        return;
+    }
+    const input=document.createElement("input");
+    input.type="file";
+    input.accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf";
+    input.style.display="none";
+    document.body.appendChild(input);
+    input.onchange=async function(){
+        const archivo=input.files&&input.files[0];
+        if(!archivo){
+            input.remove();
+            return;
+        }
+        try{
+            await subirComprobantePagoCliente(idPedido,ci,archivo,botonOrigen);
+        }finally{
+            input.remove();
+        }
+    };
+    input.click();
+}
+
+async function prepararComprobantePago(archivo){
+    const permitidos=["image/jpeg","image/png","image/webp","application/pdf"];
+    let tipo=(archivo.type||"").toLowerCase();
+
+    if(!tipo){
+        const nombre=String(archivo.name||"").toLowerCase();
+        if(/\.jpe?g$/.test(nombre)) tipo="image/jpeg";
+        else if(/\.png$/.test(nombre)) tipo="image/png";
+        else if(/\.webp$/.test(nombre)) tipo="image/webp";
+        else if(/\.pdf$/.test(nombre)) tipo="application/pdf";
+    }
+
+    if(!permitidos.includes(tipo)){
+        throw new Error("Formato no permitido. Usa JPG, JPEG, PNG, WEBP o PDF.");
+    }
+
+    if(tipo==="application/pdf"){
+        if(archivo.size>5*1024*1024) throw new Error("El PDF supera el máximo permitido de 5 MB.");
+        return {archivo:archivo,tipo:tipo,nombre:archivo.name||"comprobante.pdf"};
+    }
+
+    const imagen=await new Promise(function(resolve,reject){
+        const img=new Image();
+        const url=URL.createObjectURL(archivo);
+        img.onload=function(){URL.revokeObjectURL(url);resolve(img);};
+        img.onerror=function(){URL.revokeObjectURL(url);reject(new Error("No se pudo leer la imagen seleccionada."));};
+        img.src=url;
+    });
+
+    let ancho=imagen.naturalWidth||imagen.width;
+    let alto=imagen.naturalHeight||imagen.height;
+    const maxLado=1800;
+    if(Math.max(ancho,alto)>maxLado){
+        const escala=maxLado/Math.max(ancho,alto);
+        ancho=Math.round(ancho*escala);
+        alto=Math.round(alto*escala);
+    }
+
+    let tipoSalida=tipo;
+    let calidad=tipo==="image/jpeg"||tipo==="image/webp"?0.86:undefined;
+    let blob=null;
+
+    for(let intento=0;intento<5;intento++){
+        const canvas=document.createElement("canvas");
+        canvas.width=Math.max(1,ancho);
+        canvas.height=Math.max(1,alto);
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(imagen,0,0,canvas.width,canvas.height);
+        blob=await new Promise(function(resolve){
+            canvas.toBlob(resolve,tipoSalida,calidad);
+        });
+        if(!blob) throw new Error("No se pudo preparar la imagen.");
+        if(blob.size<=5*1024*1024) break;
+        ancho=Math.round(ancho*0.8);
+        alto=Math.round(alto*0.8);
+        if(tipoSalida==="image/jpeg"||tipoSalida==="image/webp") calidad=Math.max(0.65,(calidad||0.86)-0.07);
+    }
+
+    if(!blob||blob.size>5*1024*1024){
+        throw new Error("La imagen sigue superando el máximo permitido de 5 MB.");
+    }
+
+    const extension=tipoSalida==="image/png"?".png":tipoSalida==="image/webp"?".webp":".jpg";
+    const base=String(archivo.name||"comprobante").replace(/\.[^.]+$/,"").replace(/[^a-zA-Z0-9_-]+/g,"_");
+    return {archivo:blob,tipo:tipoSalida,nombre:base+extension};
+}
+
+function archivoABase64(blob){
+    return new Promise(function(resolve,reject){
+        const lector=new FileReader();
+        lector.onload=function(){
+            const resultado=String(lector.result||"");
+            const coma=resultado.indexOf(",");
+            resolve(coma>=0?resultado.substring(coma+1):resultado);
+        };
+        lector.onerror=function(){reject(new Error("No se pudo leer el archivo."));};
+        lector.readAsDataURL(blob);
+    });
+}
+
+async function subirComprobantePagoCliente(idPedido,ci,archivo,botonOrigen){
+    const textoOriginal=botonOrigen?botonOrigen.innerHTML:"";
+    try{
+        if(botonOrigen){
+            botonOrigen.disabled=true;
+            botonOrigen.innerHTML="⏳ PREPARANDO COMPROBANTE...";
+        }
+
+        const preparado=await prepararComprobantePago(archivo);
+        const base64=await archivoABase64(preparado.archivo);
+
+        if(botonOrigen) botonOrigen.innerHTML="⏳ ENVIANDO COMPROBANTE...";
+
+        const datos=new URLSearchParams();
+        datos.append("accion","subirComprobanteCliente");
+        datos.append("id_pedido",idPedido);
+        datos.append("ci",ci);
+        datos.append("base64",base64);
+        datos.append("tipo_archivo",preparado.tipo);
+        datos.append("nombre_archivo",preparado.nombre);
+
+        const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:datos});
+        if(!respuesta.ok) throw new Error("Error HTTP: "+respuesta.status);
+        const resultado=await respuesta.json();
+        if(!resultado.ok) throw new Error(resultado.mensaje||"No se pudo registrar el comprobante.");
+
+        alert("✅ COMPROBANTE RECIBIDO\n\nTu pago quedó EN VERIFICACIÓN. RHINO revisará el comprobante antes de continuar con el pedido.");
+        if(botonOrigen){
+            botonOrigen.innerHTML="✅ COMPROBANTE EN VERIFICACIÓN";
+            botonOrigen.disabled=true;
+        }
+
+        const seguimiento=document.getElementById("resultadoSeguimiento");
+        if(seguimiento&&document.getElementById("modalSeguimiento")&&document.getElementById("modalSeguimiento").style.display!=="none"){
+            consultarSeguimientoPedido();
+        }
+    }catch(error){
+        console.error("Error al subir comprobante:",error);
+        alert("❌ "+(error.message||"No se pudo enviar el comprobante."));
+        if(botonOrigen){
+            botonOrigen.disabled=false;
+            botonOrigen.innerHTML=textoOriginal;
+        }
+    }
 }
 
 function cerrarConfirmacionPedido(){
@@ -3820,8 +3961,8 @@ function consultarSeguimientoPedido(){
         if(pedidoCancelado){
             html+='<div style="margin-top:14px;padding:12px;border:1px solid #8b3a3a;border-radius:7px;"><b>❌ Este pedido fue cancelado.</b><br>No realices ningún pago para este pedido.</div>';
         }else if(String(estadoPago).toUpperCase().includes("PENDIENTE")||String(estadoPago).toUpperCase().includes("VERIFIC")){
-            html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="enviarComprobanteWhatsapp(\''+
-                escaparHTML(id)+'\','+Number(total||0)+',\''+escaparHTML(metodo||"Pago")+'\')">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>';
+            html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="seleccionarComprobantePago(\''+
+                escaparHTML(id)+'\',\''+escaparHTML(ci)+'\',this)">📎 CARGAR COMPROBANTE DE PAGO</button>';
         }
         html+='</div>';
         resultado.innerHTML=html;
