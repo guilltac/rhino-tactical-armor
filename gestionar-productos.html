@@ -159,7 +159,6 @@ main{
     color:#777;
 }
 
-
 /* CELULAR */
 
 @media(max-width:600px){
@@ -269,6 +268,56 @@ main{
 .cancelar-edicion{
     background:#555;
 }
+
+.fotos-editar{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:12px;
+}
+.foto-editar{
+    border:1px solid #ccc;
+    border-radius:8px;
+    padding:10px;
+    background:#fafafa;
+}
+.foto-editar strong{
+    display:block;
+    margin-bottom:8px;
+}
+.foto-preview{
+    height:130px;
+    border-radius:6px;
+    background:#e5e5e5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    margin-bottom:8px;
+}
+.foto-preview img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.foto-editar input[type="file"]{
+    width:100%;
+    margin-bottom:8px;
+}
+.eliminar-foto{
+    width:100%;
+    border:0;
+    border-radius:6px;
+    padding:8px;
+    background:#8c2020;
+    color:#fff;
+    font-weight:bold;
+    cursor:pointer;
+}
+.guardar-edicion:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
 </style>
 
 </head>
@@ -293,7 +342,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
 </header>
 
-
 <main>
 
 <a
@@ -302,7 +350,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 >
     ← Volver al panel
 </a>
-
 
 <section class="panel">
 
@@ -318,7 +365,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
         </button>
 
     </div>
-
 
     <div id="listaProductos">
 
@@ -347,7 +393,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
         id="editarId"
     >
 
-
     <div class="campo">
         <label>Nombre del producto</label>
 
@@ -356,7 +401,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
             id="editarNombre"
         >
     </div>
-
 
     <div class="campo">
         <label>Precio (Bs)</label>
@@ -369,7 +413,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
         >
     </div>
 
-
     <div class="campo">
         <label>Stock</label>
 
@@ -379,7 +422,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
             min="0"
         >
     </div>
-
 
     <div class="campo">
 
@@ -399,7 +441,6 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
     </div>
 
-
     <div class="campo">
 
         <label>Descripción</label>
@@ -410,6 +451,46 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
     </div>
 
+    <div class="campo">
+        <label>Descripción detallada</label>
+        <textarea id="editarDescripcionDetallada" style="min-height:180px;"></textarea>
+    </div>
+
+    <div class="campo">
+        <label>Fotografías del producto</label>
+        <div class="fotos-editar">
+        <div class="foto-editar">
+            <strong>Foto 1 (principal)</strong>
+            <div class="foto-preview" id="previewFoto">Sin foto</div>
+            <input type="file" id="editarFotoArchivo" accept="image/jpeg,image/png,image/webp" onchange="previsualizarNuevaFoto(1)">
+            <button type="button" class="eliminar-foto" onclick="marcarEliminarFoto(1)">🗑️ Eliminar foto</button>
+        </div>
+        <div class="foto-editar">
+            <strong>Foto 2</strong>
+            <div class="foto-preview" id="previewFoto2">Sin foto</div>
+            <input type="file" id="editarFotoArchivo2" accept="image/jpeg,image/png,image/webp" onchange="previsualizarNuevaFoto(2)">
+            <button type="button" class="eliminar-foto" onclick="marcarEliminarFoto(2)">🗑️ Eliminar foto</button>
+        </div>
+        <div class="foto-editar">
+            <strong>Foto 3</strong>
+            <div class="foto-preview" id="previewFoto3">Sin foto</div>
+            <input type="file" id="editarFotoArchivo3" accept="image/jpeg,image/png,image/webp" onchange="previsualizarNuevaFoto(3)">
+            <button type="button" class="eliminar-foto" onclick="marcarEliminarFoto(3)">🗑️ Eliminar foto</button>
+        </div>
+        <div class="foto-editar">
+            <strong>Foto 4</strong>
+            <div class="foto-preview" id="previewFoto4">Sin foto</div>
+            <input type="file" id="editarFotoArchivo4" accept="image/jpeg,image/png,image/webp" onchange="previsualizarNuevaFoto(4)">
+            <button type="button" class="eliminar-foto" onclick="marcarEliminarFoto(4)">🗑️ Eliminar foto</button>
+        </div>
+        <div class="foto-editar">
+            <strong>Foto 5</strong>
+            <div class="foto-preview" id="previewFoto5">Sin foto</div>
+            <input type="file" id="editarFotoArchivo5" accept="image/jpeg,image/png,image/webp" onchange="previsualizarNuevaFoto(5)">
+            <button type="button" class="eliminar-foto" onclick="marcarEliminarFoto(5)">🗑️ Eliminar foto</button>
+        </div>
+        </div>
+    </div>
 
     <div class="campo">
 
@@ -475,12 +556,12 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
     </div>
 
-
     <div class="botones-editor">
 
         <button
             type="button"
             class="guardar-edicion"
+            id="btnGuardarEdicion"
             onclick="guardarEdicion()"
         >
             💾 Guardar cambios
@@ -500,15 +581,15 @@ if (!sessionStorage.getItem("tokenAdmin")) {
     
 </main>
 
-
 <script>
 
 const URL_SERVIDOR =
 "https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
 
-
 let productos = [];
-
+let fotosEdicionActuales=["","","","",""];
+let fotosEdicionEliminadas=[false,false,false,false,false];
+let guardandoEdicion=false;
 
 /* =========================
    CARGAR PRODUCTOS
@@ -523,7 +604,6 @@ function cargarProductos(){
 
     lista.innerHTML =
         '<div class="mensaje">Cargando productos...</div>';
-
 
     fetch(URL_SERVIDOR)
 
@@ -552,7 +632,6 @@ function cargarProductos(){
 
 }
 
-
 /* =========================
    MOSTRAR PRODUCTOS
 ========================= */
@@ -564,7 +643,6 @@ function mostrarProductos(){
             "listaProductos"
         );
 
-
     if(!productos.length){
 
         lista.innerHTML =
@@ -574,9 +652,7 @@ function mostrarProductos(){
 
     }
 
-
     lista.innerHTML = "";
-
 
     productos.forEach(function(producto){
 
@@ -585,7 +661,6 @@ function mostrarProductos(){
 
         contenedor.className =
             "producto";
-
 
         /* FOTO */
 
@@ -615,7 +690,6 @@ function mostrarProductos(){
                 '" alt="">';
 
         }
-
 
         contenedor.innerHTML =
 
@@ -659,7 +733,6 @@ function mostrarProductos(){
 
             '</div>';
 
-
         lista.appendChild(
             contenedor
         );
@@ -667,7 +740,6 @@ function mostrarProductos(){
     });
 
 }
-
 
 /* =========================
    SEGURIDAD DE TEXTO
@@ -687,128 +759,141 @@ function escapar(valor){
 
 }
 
-
 /* =========================
    BOTONES
    Los activaremos después
 ========================= */
 
+function urlVisibleDrive(url){
+    const valor=String(url||"");
+    const coincidencia=valor.match(/[?&]id=([^&]+)/);
+    return coincidencia
+        ? "https://lh3.googleusercontent.com/d/"+coincidencia[1]
+        : valor;
+}
+
+function actualizarPreviewFoto(numero,url){
+    const sufijo=numero===1?"":String(numero);
+    const preview=document.getElementById("previewFoto"+sufijo);
+    if(!preview)return;
+    if(url){
+        preview.innerHTML='<img src="'+escapar(urlVisibleDrive(url))+'" alt="Foto '+numero+'">';
+    }else{
+        preview.textContent="Sin foto";
+    }
+}
+
 function editarProducto(id){
-
-    const producto =
-        productos.find(function(p){
-
-            return String(p.id) === String(id);
-
-        });
-
-
+    const producto=productos.find(function(p){
+        return String(p.id)===String(id);
+    });
     if(!producto){
-
-        alert(
-            "No se encontró el producto."
-        );
-
+        alert("No se encontró el producto.");
         return;
-
     }
 
+    document.getElementById("editarId").value=producto.id;
+    document.getElementById("editarNombre").value=producto.nombre||"";
+    document.getElementById("editarPrecio").value=producto.precio||"";
+    document.getElementById("editarStock").value=producto.stock||"";
+    document.getElementById("editarEstado").value=producto.estado||"activo";
+    document.getElementById("editarDescripcion").value=producto.descripcion||"";
+    document.getElementById("editarDescripcionDetallada").value=producto.descripcionDetallada||"";
 
-    /* ID */
+    fotosEdicionActuales=[
+        producto.foto||"",
+        producto.foto2||"",
+        producto.foto3||"",
+        producto.foto4||"",
+        producto.foto5||""
+    ];
+    fotosEdicionEliminadas=[false,false,false,false,false];
 
-    document
-        .getElementById("editarId")
-        .value =
-        producto.id;
+    for(let i=1;i<=5;i++){
+        const sufijo=i===1?"":String(i);
+        const input=document.getElementById("editarFotoArchivo"+sufijo);
+        if(input)input.value="";
+        actualizarPreviewFoto(i,fotosEdicionActuales[i-1]);
+    }
 
-
-    /* NOMBRE */
-
-    document
-        .getElementById("editarNombre")
-        .value =
-        producto.nombre || "";
-
-
-    /* PRECIO */
-
-    document
-        .getElementById("editarPrecio")
-        .value =
-        producto.precio || "";
-
-
-    /* STOCK */
-
-    document
-        .getElementById("editarStock")
-        .value =
-        producto.stock || "";
-
-
-    /* ESTADO */
-
-    document
-        .getElementById("editarEstado")
-        .value =
-        producto.estado || "activo";
-
-
-    /* DESCRIPCIÓN */
-
-    document
-        .getElementById("editarDescripcion")
-        .value =
-        producto.descripcion || "";
-
-
-    /* CATEGORÍAS */
-
-    const categoriasProducto =
-        String(
-            producto.categorias || ""
-        )
+    const categoriasProducto=String(producto.categorias||"")
         .split(",")
-        .map(function(categoria){
+        .map(function(categoria){return categoria.trim();});
 
-            return categoria.trim();
-
-        });
-
-
-    document
-        .querySelectorAll(
-            ".categorias-editar input[type='checkbox']"
-        )
+    document.querySelectorAll(".categorias-editar input[type='checkbox']")
         .forEach(function(caja){
-
-            caja.checked =
-                categoriasProducto.includes(
-                    caja.value
-                );
-
+            caja.checked=categoriasProducto.includes(caja.value);
         });
 
+    const editor=document.getElementById("editorProducto");
+    editor.style.display="block";
+    editor.scrollIntoView({behavior:"smooth",block:"start"});
+}
 
-    /* MOSTRAR EDITOR */
+function previsualizarNuevaFoto(numero){
+    const sufijo=numero===1?"":String(numero);
+    const input=document.getElementById("editarFotoArchivo"+sufijo);
+    if(!input||!input.files||!input.files[0])return;
+    const archivo=input.files[0];
+    if(!["image/jpeg","image/png","image/webp"].includes(archivo.type)){
+        alert("La foto debe ser JPG, PNG o WEBP.");
+        input.value="";
+        return;
+    }
+    fotosEdicionEliminadas[numero-1]=false;
+    const lector=new FileReader();
+    lector.onload=function(e){
+        actualizarPreviewFoto(numero,e.target.result);
+    };
+    lector.readAsDataURL(archivo);
+}
 
-    const editor =
-        document.getElementById(
-            "editorProducto"
-        );
+function marcarEliminarFoto(numero){
+    const sufijo=numero===1?"":String(numero);
+    const input=document.getElementById("editarFotoArchivo"+sufijo);
+    if(input)input.value="";
+    fotosEdicionEliminadas[numero-1]=true;
+    actualizarPreviewFoto(numero,"");
+}
 
-    editor.style.display =
-        "block";
-
-
-    /* BAJAR AUTOMÁTICAMENTE
-       HASTA EL FORMULARIO */
-
-    editor.scrollIntoView({
-        behavior:"smooth",
-        block:"start"
+function archivoABase64(archivo){
+    return new Promise(function(resolve,reject){
+        const lector=new FileReader();
+        lector.onload=function(){
+            const resultado=String(lector.result||"");
+            resolve(resultado.indexOf(",")>=0?resultado.split(",")[1]:resultado);
+        };
+        lector.onerror=function(){reject(new Error("No se pudo leer la imagen."));};
+        lector.readAsDataURL(archivo);
     });
+}
 
+async function subirFotoEdicion(archivo){
+    const base64=await archivoABase64(archivo);
+    const cuerpo=new URLSearchParams();
+    cuerpo.append("accion","subirImagen");
+    cuerpo.append("base64",base64);
+    cuerpo.append("tipoArchivo",archivo.type||"image/jpeg");
+    cuerpo.append("nombreArchivo",archivo.name||"imagen.jpg");
+    cuerpo.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
+
+    const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:cuerpo});
+    const texto=await respuesta.text();
+    let datos;
+    try{
+        datos=JSON.parse(texto);
+    }catch(error){
+        throw new Error("El servidor no devolvió una respuesta válida al subir la fotografía.");
+    }
+    if(datos.autorizado===false){
+        sessionStorage.removeItem("tokenAdmin");
+        window.location.replace("admin.html");
+        throw new Error("La sesión administrativa venció.");
+    }
+    if(!datos.ok||!datos.url){
+        throw new Error(datos.mensaje||"No se pudo subir la fotografía.");
+    }
+    return datos.url;
 }
 
 function eliminarProducto(id){
@@ -820,14 +905,12 @@ function eliminarProducto(id){
 
         });
 
-
     if(!producto){
 
         alert("No se encontró el producto.");
         return;
 
     }
-
 
     const confirmar =
         confirm(
@@ -836,13 +919,11 @@ function eliminarProducto(id){
             "\n\nEsta acción eliminará el producto de la tienda."
         );
 
-
     if(!confirmar){
 
         return;
 
     }
-
 
     const formulario =
         document.createElement("form");
@@ -852,14 +933,12 @@ function eliminarProducto(id){
     formulario.target = "iframeEliminar";
     formulario.style.display = "none";
 
-
     const accion =
         document.createElement("input");
 
     accion.type = "hidden";
     accion.name = "accion";
     accion.value = "eliminarProducto";
-
 
     const campoId =
         document.createElement("input");
@@ -880,10 +959,8 @@ campoToken.value =
     formulario.appendChild(campoId);
     formulario.appendChild(campoToken);
 
-
     let iframe =
         document.getElementById("iframeEliminar");
-
 
     if(!iframe){
 
@@ -898,14 +975,11 @@ campoToken.value =
 
     }
 
-
     document.body.appendChild(formulario);
 
     formulario.submit();
 
-
     alert("✅ Producto eliminado correctamente.");
-
 
     setTimeout(function(){
 
@@ -918,134 +992,96 @@ campoToken.value =
 }
 
 function cancelarEdicion(){
-
-    document
-        .getElementById(
-            "editorProducto"
-        )
-        .style.display =
-        "none";
-
+    if(guardandoEdicion)return;
+    document.getElementById("editorProducto").style.display="none";
 }
 
+async function guardarEdicion(){
+    if(guardandoEdicion)return;
 
-function guardarEdicion(){
-
-    const id =
-        document.getElementById("editarId").value;
-
-    const nombre =
-        document.getElementById("editarNombre").value.trim();
-
-    const precio =
-        document.getElementById("editarPrecio").value;
-
-    const stock =
-        document.getElementById("editarStock").value;
-
-    const estado =
-        document.getElementById("editarEstado").value;
-
-    const descripcion =
-        document.getElementById("editarDescripcion").value.trim();
-
+    const id=document.getElementById("editarId").value;
+    const nombre=document.getElementById("editarNombre").value.trim();
+    const precio=document.getElementById("editarPrecio").value;
+    const stock=document.getElementById("editarStock").value;
+    const estado=document.getElementById("editarEstado").value;
+    const descripcion=document.getElementById("editarDescripcion").value.trim();
+    const descripcionDetallada=document.getElementById("editarDescripcionDetallada").value.trim();
 
     if(!nombre){
-
         alert("Escribe el nombre del producto.");
         return;
-
     }
 
+    const categorias=[];
+    document.querySelectorAll(".categorias-editar input[type='checkbox']:checked")
+        .forEach(function(caja){categorias.push(caja.value);});
 
-    const categorias = [];
+    const boton=document.getElementById("btnGuardarEdicion");
+    guardandoEdicion=true;
+    boton.disabled=true;
+    boton.textContent="⏳ Guardando cambios...";
 
-    document
-        .querySelectorAll(
-            ".categorias-editar input[type='checkbox']:checked"
-        )
-        .forEach(function(caja){
+    try{
+        const fotosFinales=fotosEdicionActuales.slice();
 
-            categorias.push(caja.value);
+        for(let i=1;i<=5;i++){
+            const sufijo=i===1?"":String(i);
+            const input=document.getElementById("editarFotoArchivo"+sufijo);
+            if(input&&input.files&&input.files[0]){
+                boton.textContent="⏳ Subiendo foto "+i+"...";
+                fotosFinales[i-1]=await subirFotoEdicion(input.files[0]);
+            }else if(fotosEdicionEliminadas[i-1]){
+                fotosFinales[i-1]="";
+            }
+        }
 
-        });
+        boton.textContent="⏳ Guardando producto...";
 
+        const cuerpo=new URLSearchParams();
+        cuerpo.append("accion","editarProducto");
+        cuerpo.append("id",id);
+        cuerpo.append("nombre",nombre);
+        cuerpo.append("precio",precio);
+        cuerpo.append("stock",stock);
+        cuerpo.append("descripcion",descripcion);
+        cuerpo.append("descripcionDetallada",descripcionDetallada);
+        cuerpo.append("categorias",categorias.join(","));
+        cuerpo.append("estado",estado);
+        cuerpo.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
+        cuerpo.append("foto",fotosFinales[0]);
+        cuerpo.append("foto2",fotosFinales[1]);
+        cuerpo.append("foto3",fotosFinales[2]);
+        cuerpo.append("foto4",fotosFinales[3]);
+        cuerpo.append("foto5",fotosFinales[4]);
 
-    const formulario =
-        document.createElement("form");
+        const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:cuerpo});
+        const texto=await respuesta.text();
+        let resultado;
+        try{
+            resultado=JSON.parse(texto);
+        }catch(error){
+            throw new Error("El servidor recibió la solicitud, pero no devolvió una confirmación válida. No vuelvas a pulsar Guardar; primero verifica la planilla.");
+        }
 
-    formulario.method = "POST";
-    formulario.action = URL_SERVIDOR;
-    formulario.target = "iframeEdicion";
-    formulario.style.display = "none";
+        if(resultado.autorizado===false){
+            sessionStorage.removeItem("tokenAdmin");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok){
+            throw new Error(resultado.mensaje||"No se pudo actualizar el producto.");
+        }
 
-
-    const datos = {
-
-        accion: "editarProducto",
-        id: id,
-        nombre: nombre,
-        precio: precio,
-        stock: stock,
-        descripcion: descripcion,
-        categorias: categorias.join(","),
-        estado: estado,
-        tokenAdmin:
-    sessionStorage.getItem("tokenAdmin") || ""
-
-    };
-
-
-    Object.keys(datos).forEach(function(clave){
-
-        const input =
-            document.createElement("input");
-
-        input.type = "hidden";
-        input.name = clave;
-        input.value = datos[clave];
-
-        formulario.appendChild(input);
-
-    });
-
-
-    let iframe =
-        document.getElementById("iframeEdicion");
-
-
-    if(!iframe){
-
-        iframe =
-            document.createElement("iframe");
-
-        iframe.name = "iframeEdicion";
-        iframe.id = "iframeEdicion";
-        iframe.style.display = "none";
-
-        document.body.appendChild(iframe);
-
+        alert("✅ Producto actualizado correctamente.");
+        document.getElementById("editorProducto").style.display="none";
+        await cargarProductos();
+    }catch(error){
+        alert("❌ "+(error.message||String(error)));
+    }finally{
+        guardandoEdicion=false;
+        boton.disabled=false;
+        boton.textContent="💾 Guardar cambios";
     }
-
-
-    document.body.appendChild(formulario);
-
-    formulario.submit();
-
-
-    alert("✅ Cambios enviados correctamente.");
-
-
-    setTimeout(function(){
-
-        formulario.remove();
-
-        cancelarEdicion();
-
-        cargarProductos();
-
-    }, 1500);
-
 }
 
 /* CARGAR AL ABRIR */
