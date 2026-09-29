@@ -205,7 +205,6 @@ td{
     border-radius:6px;
 }
 
-
 .control-estado{
     background:#f6f6f6;
     border:1px solid #ddd;
@@ -240,7 +239,6 @@ td{
     cursor:not-allowed;
 }
 
-
 .control-verificacion{
     background:#f6f6f6;
     border:1px solid #ddd;
@@ -257,6 +255,55 @@ td{
 .btn-verificar-policia:disabled{
     opacity:.6;
     cursor:not-allowed;
+}
+
+.btn-whatsapp{
+    background:#1f9d48;
+    color:white;
+    width:100%;
+    margin-top:10px;
+}
+.control-pago{
+    background:#fff8e6;
+    border:1px solid #e2c36b;
+    border-radius:8px;
+    padding:16px;
+}
+.acciones-pago{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin-top:12px;
+}
+.btn-comprobante{
+    display:block;
+    text-align:center;
+    text-decoration:none;
+    background:#222;
+    color:white;
+    border-radius:6px;
+    padding:11px 14px;
+    font-weight:bold;
+    margin-top:10px;
+}
+.btn-confirmar-pago{
+    background:#315f24;
+    color:white;
+    width:100%;
+}
+.btn-rechazar-pago{
+    background:#8b1e1e;
+    color:white;
+    width:100%;
+}
+.aviso-pago{
+    margin:0 0 10px;
+    line-height:1.5;
+}
+@media(max-width:650px){
+    .acciones-pago{
+        grid-template-columns:1fr;
+    }
 }
 
 @media(max-width:650px){
@@ -364,7 +411,6 @@ const URL_SERVIDOR =
 
 let pedidosCargados = [];
 
-
 function escapar(valor){
 
     if(
@@ -383,6 +429,16 @@ function escapar(valor){
         .replace(/'/g,"&#039;");
 }
 
+function escaparAtributoURL(valor){
+    const url=String(valor||"").trim();
+    if(!/^https:\/\//i.test(url)) return "#";
+    return url
+        .replace(/&/g,"&amp;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;");
+}
 
 function formatearFecha(valor){
 
@@ -405,7 +461,6 @@ function formatearFecha(valor){
     );
 }
 
-
 function formatearDinero(valor){
 
     if(
@@ -425,7 +480,6 @@ function formatearDinero(valor){
     return "Bs " + numero.toFixed(2);
 }
 
-
 function cargarPedidos(){
 
     const estadoCarga =
@@ -440,7 +494,6 @@ function cargarPedidos(){
 
     tablaContenedor.style.display = "none";
 
-
     const datos =
         new URLSearchParams();
 
@@ -453,7 +506,6 @@ function cargarPedidos(){
         "tokenAdmin",
         sessionStorage.getItem("tokenAdmin") || ""
     );
-
 
     fetch(
         URL_SERVIDOR,
@@ -487,7 +539,6 @@ function cargarPedidos(){
             return;
         }
 
-
         if(!resultado.ok){
 
             throw new Error(
@@ -495,7 +546,6 @@ function cargarPedidos(){
                 "No se pudieron cargar los pedidos."
             );
         }
-
 
         pedidosCargados =
             resultado.pedidos || [];
@@ -518,7 +568,6 @@ function cargarPedidos(){
 
 }
 
-
 function mostrarPedidos(){
 
     const cuerpo =
@@ -531,7 +580,6 @@ function mostrarPedidos(){
         document.getElementById("tablaContenedor");
 
     cuerpo.innerHTML = "";
-
 
     if(pedidosCargados.length === 0){
 
@@ -546,7 +594,6 @@ function mostrarPedidos(){
 
         return;
     }
-
 
     pedidosCargados.forEach(
         function(pedido, indice){
@@ -605,14 +652,12 @@ function mostrarPedidos(){
         }
     );
 
-
     estadoCarga.style.display =
         "none";
 
     tablaContenedor.style.display =
         "block";
 }
-
 
 function dato(titulo, valor){
 
@@ -625,7 +670,6 @@ function dato(titulo, valor){
         "</div>"
     );
 }
-
 
 function verPedido(indice){
 
@@ -642,9 +686,7 @@ function verPedido(indice){
         "Pedido " +
         (p.id_pedido || "");
 
-
     let html = "";
-
 
     html +=
         "<div class='seccion'>" +
@@ -661,7 +703,6 @@ function verPedido(indice){
         "</div>" +
         "</div>";
 
-
     html +=
         "<div class='seccion'>" +
         "<h3>📦 Productos</h3>" +
@@ -669,7 +710,6 @@ function verPedido(indice){
             escapar(p.productos) +
         "</div>" +
         "</div>";
-
 
     html +=
         "<div class='seccion'>" +
@@ -719,63 +759,59 @@ function verPedido(indice){
         "</div>" +
         "</div>";
 
+    const estadoPagoActual = String(p.estado_pago || "PENDIENTE").toUpperCase();
+    const tieneComprobante = !!String(p.comprobante_pago || "").trim();
 
     html +=
         "<div class='seccion'>" +
         "<h3>💳 Pago</h3>" +
         "<div class='datos'>" +
-
-            dato(
-                "Método de pago",
-                p.metodo_pago
-            ) +
-
-            dato(
-                "Estado de pago",
-                p.estado_pago
-            ) +
-
-            dato(
-                "Comprobante",
-                p.comprobante_pago
-            ) +
-
-            dato(
-                "Fecha comprobante",
-                formatearFecha(
-                    p.fecha_comprobante
-                )
-            ) +
-
-            dato(
-                "Fecha verificación",
-                formatearFecha(
-                    p.fecha_verificacion_pago
-                )
-            ) +
-
-            dato(
-                "Verificado por",
-                p.verificado_por
-            ) +
-
-            dato(
-                "Fecha de pago",
-                formatearFecha(
-                    p.fecha_pago
-                )
-            ) +
-
-            dato(
-                "Vencimiento pago",
-                formatearFecha(
-                    p.vencimiento_pago
-                )
-            ) +
-
-        "</div>" +
+            dato("Método de pago", p.metodo_pago) +
+            dato("Estado de pago", p.estado_pago) +
+            dato("Fecha comprobante", formatearFecha(p.fecha_comprobante)) +
+            dato("Fecha verificación", formatearFecha(p.fecha_verificacion_pago)) +
+            dato("Verificado por", p.verificado_por) +
+            dato("Fecha de pago", formatearFecha(p.fecha_pago)) +
+            dato("Vencimiento pago", formatearFecha(p.vencimiento_pago)) +
         "</div>";
 
+    if(tieneComprobante){
+        html +=
+            "<a class='btn-comprobante' href='" +
+            escaparAtributoURL(p.comprobante_pago) +
+            "' target='_blank' rel='noopener noreferrer'>👁 VER COMPROBANTE DE PAGO</a>";
+    }
+
+    if(estadoPagoActual === "EN VERIFICACIÓN"){
+        html +=
+            "<div class='control-pago' style='margin-top:12px;'>" +
+                "<p class='aviso-pago'><strong>⏳ COMPROBANTE EN VERIFICACIÓN</strong><br>Revisa el archivo antes de confirmar o rechazar el pago.</p>" +
+                "<div class='acciones-pago'>" +
+                    "<button type='button' id='btnConfirmarPago' class='btn-confirmar-pago' onclick='confirmarPagoPedido(" +
+                        JSON.stringify(String(p.id_pedido || "")) +
+                    ")'>✅ CONFIRMAR PAGO</button>" +
+                    "<button type='button' id='btnRechazarPago' class='btn-rechazar-pago' onclick='rechazarComprobantePedido(" +
+                        JSON.stringify(String(p.id_pedido || "")) +
+                    ")'>❌ RECHAZAR COMPROBANTE</button>" +
+                "</div>" +
+            "</div>";
+    }else if(
+        estadoPagoActual === "PAGO CONFIRMADO" ||
+        estadoPagoActual === "PAGADO" ||
+        estadoPagoActual === "CONFIRMADO"
+    ){
+        html +=
+            "<div class='control-pago' style='margin-top:12px;background:#edf8ed;border-color:#9ac79a;'>" +
+                "<p class='aviso-pago'><strong>✅ PAGO CONFIRMADO</strong><br>El pago de este pedido ya fue verificado por RHINO.</p>" +
+            "</div>";
+    }else{
+        html +=
+            "<div class='control-pago' style='margin-top:12px;'>" +
+                "<p class='aviso-pago'><strong>💳 PAGO PENDIENTE</strong><br>El cliente todavía puede cargar su comprobante desde SEGUIR MI PEDIDO.</p>" +
+            "</div>";
+    }
+
+    html += "</div>";
 
     html +=
         "<div class='seccion'>" +
@@ -838,7 +874,6 @@ function verPedido(indice){
         "</div>" +
         "</div>";
 
-
     html +=
         "<div class='seccion'>" +
         "<h3>⚙️ Cambiar estado del pedido</h3>" +
@@ -866,8 +901,17 @@ function verPedido(indice){
             "</button>" +
 
         "</div>" +
-        "</div>";
+        "</div>" +
 
+        "<div class='seccion'>" +
+        "<h3>📱 Avisar al cliente</h3>" +
+        "<div class='control-estado'>" +
+            "<p style='margin-top:0;line-height:1.5;'>El mensaje se prepara según el estado seleccionado arriba. Puedes revisarlo en WhatsApp antes de enviarlo.</p>" +
+            "<button type='button' class='btn-whatsapp' onclick='enviarAvisoWhatsApp(" +
+                indice +
+            ")'>📱 AVISAR AL CLIENTE POR WHATSAPP</button>" +
+        "</div>" +
+        "</div>";
 
     html +=
         "<div class='seccion'>" +
@@ -887,7 +931,6 @@ function verPedido(indice){
             "</button>" +
         "</div>" +
         "</div>";
-
 
     html +=
         "<div class='seccion'>" +
@@ -931,19 +974,15 @@ function verPedido(indice){
         "</div>" +
         "</div>";
 
-
     document
     .getElementById("detallePedido")
     .innerHTML = html;
-
 
     document
     .getElementById("modalPedido")
     .style.display = "block";
 
 }
-
-
 
 function opcionEstado(valor, estadoActual){
 
@@ -962,7 +1001,6 @@ function opcionEstado(valor, estadoActual){
         "</option>"
     );
 }
-
 
 function guardarEstadoPedido(idPedido){
 
@@ -1077,8 +1115,6 @@ function guardarEstadoPedido(idPedido){
     });
 }
 
-
-
 function verificarClientePolicial(idPedido){
 
     if(!idPedido){
@@ -1178,6 +1214,137 @@ function verificarClientePolicial(idPedido){
     });
 }
 
+function ejecutarAccionPago(accion,idPedido,mensajeConfirmacion){
+    if(!idPedido) return;
+    if(!confirm(mensajeConfirmacion)) return;
+
+    const btnConfirmar=document.getElementById("btnConfirmarPago");
+    const btnRechazar=document.getElementById("btnRechazarPago");
+    if(btnConfirmar) btnConfirmar.disabled=true;
+    if(btnRechazar) btnRechazar.disabled=true;
+
+    const datos=new URLSearchParams();
+    datos.append("accion",accion);
+    datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin") || "");
+    datos.append("id_pedido",idPedido);
+
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(!resultado.autorizado){
+            sessionStorage.removeItem("tokenAdmin");
+            alert(resultado.mensaje || "La sesión administrativa venció.");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok){
+            throw new Error(resultado.mensaje || "No se pudo actualizar el pago.");
+        }
+        alert("✅ " + (resultado.mensaje || "Pago actualizado correctamente."));
+        cerrarPedido();
+        cargarPedidos();
+    })
+    .catch(function(error){
+        console.error(error);
+        alert("❌ " + error.message);
+        if(btnConfirmar) btnConfirmar.disabled=false;
+        if(btnRechazar) btnRechazar.disabled=false;
+    });
+}
+
+function confirmarPagoPedido(idPedido){
+    ejecutarAccionPago(
+        "confirmarPagoPedido",
+        idPedido,
+        "¿Confirmas que revisaste el comprobante y que el pago fue recibido correctamente?\n\nPedido: " + idPedido
+    );
+}
+
+function rechazarComprobantePedido(idPedido){
+    ejecutarAccionPago(
+        "rechazarComprobantePedido",
+        idPedido,
+        "¿Rechazar este comprobante?\n\nEl pago volverá a PENDIENTE y el cliente podrá cargar un nuevo archivo.\n\nPedido: " + idPedido
+    );
+}
+
+function normalizarTelefonoWhatsApp(valor){
+    let numero=String(valor||"").replace(/\D/g,"");
+    if(!numero) return "";
+    if(numero.startsWith("00")) numero=numero.substring(2);
+    if(numero.length===8) numero="591"+numero;
+    return numero;
+}
+
+function textoEstadoCliente(estado,p){
+    const e=String(estado||"PEDIDO RECIBIDO").toUpperCase();
+    const pago=String(p.estado_pago||"PENDIENTE").toUpperCase();
+
+    if(e==="PEDIDO RECIBIDO"){
+        if(pago==="PENDIENTE"){
+            return "Hemos recibido tu pedido. El pago está pendiente. Puedes ingresar a nuestra página, abrir SEGUIR MI PEDIDO con tu código y C.I., y cargar allí tu comprobante.";
+        }
+        if(pago==="EN VERIFICACIÓN"){
+            return "Hemos recibido tu pedido y también tu comprobante. Tu pago está EN VERIFICACIÓN. Te avisaremos cuando sea confirmado.";
+        }
+        return "Hemos recibido tu pedido y tu pago ya está confirmado.";
+    }
+    if(e==="PREPARANDO"){
+        return "Tu pedido ya se encuentra EN PREPARACIÓN. Estamos alistándolo para la entrega.";
+    }
+    if(e==="ENVIADO"){
+        return "Tu pedido ya fue ENVIADO." +
+            (p.transportadora ? " Transportadora: "+p.transportadora+"." : "") +
+            (p.numero_guia ? " N.º de guía: "+p.numero_guia+"." : "");
+    }
+    if(e==="LISTO PARA RECOGER"){
+        return "Tu pedido está LISTO PARA RECOGER. Coordina la entrega según la modalidad seleccionada.";
+    }
+    if(e==="ENTREGADO"){
+        return "Tu pedido figura como ENTREGADO. Gracias por confiar en RHINO TACTICAL ARMOR.";
+    }
+    if(e==="CANCELADO"){
+        return "Tu pedido fue CANCELADO." +
+            (p.motivo_cancelacion ? " Motivo: "+p.motivo_cancelacion+"." : "");
+    }
+    return "Tenemos una actualización sobre tu pedido: "+e+".";
+}
+
+function enviarAvisoWhatsApp(indice){
+    const p=pedidosCargados[indice];
+    if(!p){
+        alert("No se pudo identificar el pedido.");
+        return;
+    }
+
+    const telefono=normalizarTelefonoWhatsApp(p.telefono);
+    if(!telefono){
+        alert("Este pedido no tiene un número de teléfono válido.");
+        return;
+    }
+
+    const selector=document.getElementById("nuevoEstadoPedido");
+    const estado=selector ? selector.value : (p.estado_pedido||"PEDIDO RECIBIDO");
+    const id=String(p.id_pedido||"");
+    const cliente=String(p.cliente||"cliente");
+    const total=formatearDinero(p.total_a_cobrar);
+
+    let mensaje=
+        "Hola "+cliente+". Somos RHINO TACTICAL ARMOR.\n\n"+
+        "Pedido: *"+id+"*\n"+
+        textoEstadoCliente(estado,p)+"\n\n"+
+        "Estado del pago: *"+String(p.estado_pago||"PENDIENTE")+"*\n"+
+        "Total: *"+total+"*";
+
+    if(String(p.estado_pago||"").toUpperCase()==="PENDIENTE" && String(estado).toUpperCase()!=="CANCELADO"){
+        mensaje += "\n\nPara enviar tu comprobante: entra a nuestra página → *SEGUIR MI PEDIDO* → ingresa *"+id+"* y tu C.I. → *CARGAR COMPROBANTE DE PAGO*.";
+    }else if(String(p.estado_pago||"").toUpperCase()==="EN VERIFICACIÓN"){
+        mensaje += "\n\nNo necesitas volver a cargar el comprobante mientras esté EN VERIFICACIÓN.";
+    }
+
+    mensaje += "\n\nRHINO TACTICAL ARMOR\nPROTECCIÓN · RESISTENCIA · CONFIANZA";
+    window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+}
 
 function cerrarPedido(){
 
@@ -1186,7 +1353,6 @@ function cerrarPedido(){
     .style.display = "none";
 
 }
-
 
 document
 .getElementById("modalPedido")
@@ -1201,7 +1367,6 @@ document
     }
 );
 
-
 document.addEventListener(
     "keydown",
     function(event){
@@ -1212,7 +1377,6 @@ document.addEventListener(
 
     }
 );
-
 
 cargarPedidos();
 
