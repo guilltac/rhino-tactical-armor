@@ -31,7 +31,6 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <a href="index.html" style="display:inline-block;margin-top:15px;color:#aaa;text-decoration:none;">← Volver a la tienda</a>
 </div>
 </div>
-
 <div id="panelAdmin" style="display:none;">
 <header class="admin-header">
 <h1>RHINO TACTICAL ARMOR</h1>
@@ -55,21 +54,16 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <h2>Gestionar pedidos</h2>
 <p>Revisar pedidos, pagos, envíos y entregas</p>
 </a>
-
-<!-- Categorías se administrarán desde una sola pantalla -->
 <a href="gestionar-categorias.html" class="card">
 <div class="card-icon">🏷️</div>
 <h2>Gestionar categorías</h2>
 <p>Agregar, editar, activar y eliminar categorías</p>
 </a>
-
-<!-- Nueva arquitectura preparada para múltiples tiendas/bases -->
 <a href="gestionar-bases.html" class="card">
 <div class="card-icon">📍</div>
 <h2>Bases / Tiendas RHINO</h2>
 <p>Agregar, editar y administrar puntos de despacho y su ubicación</p>
 </a>
-
 <div class="card">
 <div class="card-icon">📊</div>
 <h2>Inventario</h2>
@@ -84,13 +78,30 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <a href="index.html" class="back">← Volver a la tienda</a>
 </main>
 </div>
-
 <script>
 const URL_SERVIDOR="https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
+
+function mostrarPanelAdmin(){
+    document.getElementById("accesoAdmin").style.display="none";
+    document.getElementById("panelAdmin").style.display="block";
+}
+
+function mostrarAccesoAdmin(){
+    document.getElementById("accesoAdmin").style.display="flex";
+    document.getElementById("panelAdmin").style.display="none";
+}
+
+if(sessionStorage.getItem("tokenAdmin")){
+    mostrarPanelAdmin();
+}else{
+    mostrarAccesoAdmin();
+}
+
 document.getElementById("btnIngresarAdmin").addEventListener("click",ingresarAdmin);
 document.getElementById("claveAdmin").addEventListener("keydown",function(e){
     if(e.key==="Enter") ingresarAdmin();
 });
+
 function ingresarAdmin(){
     const clave=document.getElementById("claveAdmin").value;
     const mensaje=document.getElementById("mensajeAcceso");
@@ -108,8 +119,9 @@ function ingresarAdmin(){
     .then(function(resultado){
         if(resultado.autorizado){
             sessionStorage.setItem("tokenAdmin",resultado.token);
-            document.getElementById("accesoAdmin").style.display="none";
-            document.getElementById("panelAdmin").style.display="block";
+            mostrarPanelAdmin();
+            document.getElementById("claveAdmin").value="";
+            mensaje.textContent="";
         }else{
             mensaje.style.color="#ff6b6b";
             mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";
