@@ -3764,7 +3764,7 @@ function escaparHTML(valor){
         .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
 function consultarSeguimientoPedido(){
-    const pedido=document.getElementById("seguimientoPedido").value.trim().toUpperCase();
+    let pedido=document.getElementById("seguimientoPedido").value.trim().toUpperCase().replace(/\s+/g,"");
     const ci=document.getElementById("seguimientoCI").value.trim();
     const resultado=document.getElementById("resultadoSeguimiento");
     const boton=document.getElementById("btnConsultarSeguimiento");
@@ -3772,6 +3772,14 @@ function consultarSeguimientoPedido(){
         alert("Ingresa el número de pedido y tu C.I.");
         return;
     }
+    if(/^RTA\d+$/.test(pedido)){
+        pedido="RTA-"+pedido.substring(3);
+    }
+    if(!/^RTA-\d+$/.test(pedido)){
+        alert("Ingresa el código completo del pedido. Ejemplo: RTA-0009 o RTA0009.");
+        return;
+    }
+    document.getElementById("seguimientoPedido").value=pedido;
     resultado.innerHTML='<div class="track-result">Consultando pedido...</div>';
     boton.disabled=true;
     const datos=new URLSearchParams();
@@ -3808,7 +3816,10 @@ function consultarSeguimientoPedido(){
             (entrega?'<div><b>Entrega:</b> '+escaparHTML(entrega)+'</div>':'')+
             (transportadora?'<div><b>Transportadora:</b> '+escaparHTML(transportadora)+'</div>':'')+
             (guia?'<div><b>N.º de guía:</b> '+escaparHTML(guia)+'</div>':'');
-        if(String(estadoPago).toUpperCase().includes("PENDIENTE")||String(estadoPago).toUpperCase().includes("VERIFIC")){
+        const pedidoCancelado=String(estadoPedido).toUpperCase().includes("CANCEL");
+        if(pedidoCancelado){
+            html+='<div style="margin-top:14px;padding:12px;border:1px solid #8b3a3a;border-radius:7px;"><b>❌ Este pedido fue cancelado.</b><br>No realices ningún pago para este pedido.</div>';
+        }else if(String(estadoPago).toUpperCase().includes("PENDIENTE")||String(estadoPago).toUpperCase().includes("VERIFIC")){
             html+='<button type="button" class="checkout-button" style="background:#1f9d48;" onclick="enviarComprobanteWhatsapp(\''+
                 escaparHTML(id)+'\','+Number(total||0)+',\''+escaparHTML(metodo||"Pago")+'\')">📱 ENVIAR COMPROBANTE POR WHATSAPP</button>';
         }
