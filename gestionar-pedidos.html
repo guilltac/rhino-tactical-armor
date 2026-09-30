@@ -670,7 +670,12 @@ function obtenerAlertaPedido(pedido){
     if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO"){
         return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
     }
-    if(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido){
+    const idRevision=String(pedido.id_pedido||"").trim();
+    const revisionGuardada=idRevision ? Number(localStorage.getItem(claveRevisionPedido(idRevision))||0) : 0;
+    const ultimaRevision=fechaMilisegundos(pedido.ultima_actualizacion);
+    const yaRevisado=revisionGuardada>0 && (!ultimaRevision || revisionGuardada>=ultimaRevision);
+
+    if((estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido) && !yaRevisado){
         return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
     }
     if(tieneActividadNueva(pedido)){
@@ -700,6 +705,38 @@ function descargarNotaVenta(url){
     if(!descarga) return;
     window.open(descarga,"_blank","noopener");
 }
+
+function enviarMensajeClienteWhatsApp(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+
+    let telefono=String(pedido.telefono||"").replace(/[^\d]/g,"");
+    if(telefono.startsWith("00")) telefono=telefono.slice(2);
+    if(telefono.length===8) telefono="591"+telefono;
+
+    if(telefono.length<10||telefono.length>15){
+        alert("Revisa el teléfono del cliente en el pedido antes de abrir WhatsApp.");
+        return;
+    }
+
+    const id=String(pedido.id_pedido||"").trim();
+    const estado=String(pedido.estado_pedido||"PEDIDO RECIBIDO").trim().toUpperCase();
+    let mensaje="🦏 *RHINO TACTICAL ARMOR* 🦏\n\n";
+
+    if(estado==="PEDIDO RECIBIDO"){
+        mensaje+="Hemos recibido correctamente tu pedido *"+id+"*.\n\n"+
+            "📦 Tu pedido se encuentra registrado y estamos a la espera de la confirmación correspondiente para continuar con su procesamiento.\n\n";
+    }else{
+        mensaje+="Información sobre tu pedido *"+id+"*.\n"+
+            "📦 Estado actual: *"+estado+"*.\n\n";
+    }
+
+    mensaje+="Gracias por confiar en RHINO TACTICAL ARMOR.\n"+
+        "_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
+
+    window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+}
+
 
 function enviarNotaWhatsApp(indice){
     const pedido=pedidosCargados[indice];
@@ -758,7 +795,8 @@ function mostrarPedidos(){
 
         let acciones=
             "<div class='acciones-rapidas'>"+
-            "<button type='button' class='btn-ver' onclick='verPedido("+indice+")'>👁 Ver</button>";
+            "<button type='button' class='btn-ver' onclick='verPedido("+indice+")'>👁 Ver</button>"+
+            "<button type='button' class='btn-whatsapp' onclick='enviarMensajeClienteWhatsApp("+indice+")'>📱 WhatsApp</button>";
 
         if(notaDisponible){
             const url=JSON.stringify(String(pedido.url_nota_pdf||""));
