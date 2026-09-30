@@ -165,6 +165,11 @@ td{
     color:white;
     white-space:nowrap;
 }
+.btn-whatsapp{
+    background:#167c45;
+    color:white;
+    white-space:nowrap;
+}
 
 .modal{
     display:none;
@@ -336,7 +341,7 @@ th:nth-child(3),td:nth-child(3){width:24%;}
 th:nth-child(4),td:nth-child(4){width:8%;}
 th:nth-child(5),td:nth-child(5){width:10%;}
 th:nth-child(6),td:nth-child(6){width:12%;}
-th:nth-child(7),td:nth-child(7){width:24%;}
+th:nth-child(7),td:nth-child(7){width:30%;}
 .acciones-rapidas{
     display:flex;
     align-items:center;
@@ -344,7 +349,7 @@ th:nth-child(7),td:nth-child(7){width:24%;}
     gap:6px;
     white-space:nowrap;
 }
-.btn-ver,.btn-nota,.btn-descargar{
+.btn-ver,.btn-nota,.btn-descargar,.btn-whatsapp{
     padding:10px 12px;
     white-space:nowrap;
 }
@@ -356,7 +361,7 @@ th:nth-child(7),td:nth-child(7){width:24%;}
         overflow-x:auto;
     }
     table{
-        min-width:1050px;
+        min-width:1220px;
     }
 }
 
@@ -696,6 +701,30 @@ function descargarNotaVenta(url){
     window.open(descarga,"_blank","noopener");
 }
 
+function enviarNotaWhatsApp(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+    const url=String(pedido.url_nota_pdf||"").trim();
+    if(!url){
+        alert("Este pedido todavía no tiene una Nota de Venta disponible.");
+        return;
+    }
+    let telefono=String(pedido.telefono||"").replace(/[^\d]/g,"");
+    if(telefono.startsWith("00")) telefono=telefono.slice(2);
+    if(telefono.length===8) telefono="591"+telefono;
+    if(telefono.length<10||telefono.length>15){
+        alert("Revisa el teléfono del cliente en el pedido antes de abrir WhatsApp.");
+        return;
+    }
+    const numeroNota=String(pedido.numero_nota||"Nota de Venta").trim();
+    const mensaje="RHINO TACTICAL ARMOR\n\n"+
+        "Su pedido "+String(pedido.id_pedido||"")+" fue entregado correctamente.\n"+
+        "Gracias por confiar en nosotros.\n\n"+
+        "📄 Descargar Nota de Venta "+numeroNota+":\n"+url+"\n\n"+
+        "PROTECCIÓN · RESISTENCIA · CONFIANZA";
+    window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+}
+
 function mostrarPedidos(){
 
     const cuerpo=document.getElementById("tablaPedidos");
@@ -735,7 +764,8 @@ function mostrarPedidos(){
             const url=JSON.stringify(String(pedido.url_nota_pdf||""));
             acciones+=
                 "<button type='button' class='btn-nota' onclick='verNotaVenta("+url+")'>📄 Ver / Imprimir</button>"+
-                "<button type='button' class='btn-descargar' onclick='descargarNotaVenta("+url+")'>⬇️ Descargar</button>";
+                "<button type='button' class='btn-descargar' onclick='descargarNotaVenta("+url+")'>⬇️ Descargar</button>"+
+                "<button type='button' class='btn-whatsapp' onclick='enviarNotaWhatsApp("+indice+")'>📱 Enviar nota</button>";
         }
 
         acciones+="</div>";
