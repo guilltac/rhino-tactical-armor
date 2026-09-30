@@ -706,6 +706,127 @@ function descargarNotaVenta(url){
     window.open(descarga,"_blank","noopener");
 }
 
+function bloquearBotonesPago(bloquear){
+    ["btnConfirmarPago","btnConfirmarAvisarPago","btnRechazarPago"].forEach(function(id){
+        const boton=document.getElementById(id);
+        if(boton) boton.disabled=!!bloquear;
+    });
+}
+
+function ejecutarAccionPago(accion,indice,mensajeConfirmacion,avisarWhatsApp){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+
+    const idPedido=String(pedido.id_pedido||"").trim();
+    if(!idPedido) return;
+    if(!confirm(mensajeConfirmacion)) return;
+
+    bloquearBotonesPago(true);
+
+    const datos=new URLSearchParams();
+    datos.append("accion",accion);
+    datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin") || "");
+    datos.append("id_pedido",idPedido);
+
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(!resultado.autorizado){
+            sessionStorage.removeItem("tokenAdmin");
+            alert(resultado.mensaje || "La sesión administrativa venció.");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok){
+            throw new Error(resultado.mensaje || "No se pudo actualizar el pago.");
+        }
+
+        alert("✅ " + (resultado.mensaje || "Pago actualizado correctamente."));
+
+        if(avisarWhatsApp){
+            enviarConfirmacionPagoWhatsApp(indice);
+        }
+
+        cerrarPedido();
+        cargarPedidos();
+    })
+    .catch(function(error){
+        console.error(error);
+        alert("❌ " + error.message);
+        bloquearBotonesPago(false);
+    });
+}
+
+function confirmarPagoPedido(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+    const idPedido=String(pedido.id_pedido||"").trim();
+
+    ejecutarAccionPago(
+        "confirmarPagoPedido",
+        indice,
+        "¿Confirmas que revisaste el comprobante y que el pago fue recibido correctamente?\n\nPedido: " + idPedido,
+        false
+    );
+}
+
+function confirmarPagoYWhatsApp(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+    const idPedido=String(pedido.id_pedido||"").trim();
+
+    ejecutarAccionPago(
+        "confirmarPagoPedido",
+        indice,
+        "¿Confirmas el pago y deseas preparar el aviso por WhatsApp para el cliente?\n\nPedido: " + idPedido,
+        true
+    );
+}
+
+function rechazarComprobantePedido(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+    const idPedido=String(pedido.id_pedido||"").trim();
+
+    ejecutarAccionPago(
+        "rechazarComprobantePedido",
+        indice,
+        "¿Rechazar este comprobante?\n\nEl pago volverá a PENDIENTE y el cliente podrá cargar un nuevo archivo.\n\nPedido: " + idPedido,
+        false
+    );
+}
+
+function enviarConfirmacionPagoWhatsApp(indice){
+    const pedido=pedidosCargados[indice];
+    if(!pedido) return;
+
+    let telefono=String(pedido.telefono||"").replace(/[^\d]/g,"");
+    if(telefono.startsWith("00")) telefono=telefono.slice(2);
+    if(telefono.length===8) telefono="591"+telefono;
+
+    if(telefono.length<10||telefono.length>15){
+        alert("El pago fue confirmado, pero debes revisar el teléfono del cliente antes de abrir WhatsApp.");
+        return;
+    }
+
+    const id=String(pedido.id_pedido||"").trim();
+    const mensaje="🦏 *RHINO TACTICAL ARMOR* 🦏\n\n"+
+        "✅ Confirmamos correctamente el pago de tu pedido *"+id+"*.\n\n"+
+        "📦 Tu pedido continuará con el proceso correspondiente. Te mantendremos informado sobre su avance.\n\n"+
+        "Gracias por confiar en RHINO TACTICAL ARMOR.\n"+
+        "_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
+
+    const textoWhatsApp=encodeURIComponent(mensaje);
+    const esMovil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if(esMovil){
+        window.location.href="whatsapp://send?phone="+telefono+"&text="+textoWhatsApp;
+    }else{
+        window.open("https://web.whatsapp.com/send?phone="+telefono+"&text="+textoWhatsApp,"_blank","noopener");
+    }
+}
+
+
 function enviarMensajeClienteWhatsApp(indice,estadoForzado){
     const pedido=pedidosCargados[indice];
     if(!pedido) return;
@@ -1035,8 +1156,21 @@ function verPedido(indice){
                 )
             ) +
 
-        "</div>" +
         "</div>";
+
+    if(String(p.estado_pago||"").trim().toUpperCase()==="EN VERIFICACIÓN"){
+        html +=
+            "<div style='margin-top:14px;padding:14px;border:1px solid #e0a800;border-radius:8px;background:#fff8df;'>" +
+                "<div style='font-weight:bold;margin-bottom:10px;'>⏳ COMPROBANTE EN VERIFICACIÓN</div>" +
+                "<div style='display:flex;gap:8px;flex-wrap:wrap;'>" +
+                    "<button type='button' id='btnConfirmarPago' class='btn-guardar' onclick='confirmarPagoPedido("+indice+")'>✅ CONFIRMAR PAGO</button>" +
+                    "<button type='button' id='btnConfirmarAvisarPago' class='btn-whatsapp' onclick='confirmarPagoYWhatsApp("+indice+")'>📱 CONFIRMAR + AVISAR</button>" +
+                    "<button type='button' id='btnRechazarPago' class='btn-cancelar' onclick='rechazarComprobantePedido("+indice+")'>❌ RECHAZAR COMPROBANTE</button>" +
+                "</div>" +
+            "</div>";
+    }
+
+    html += "</div>";
 
 
     html +=
