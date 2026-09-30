@@ -12,11 +12,12 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 .admin-header p{margin:7px 0 0;color:#bbb}
 .container{max-width:1100px;margin:30px auto;padding:0 20px}
 .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.card{display:block;background:white;border:1px solid #ddd;border-radius:10px;padding:25px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;color:#222}
+.card{display:block;background:white;border:1px solid #ddd;border-radius:10px;padding:25px;text-align:center;cursor:pointer;transition:.2s;text-decoration:none;color:#222;position:relative}
 .card:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,.15)}
 .card-icon{font-size:38px;margin-bottom:12px}
 .card h2{margin:5px 0;font-size:19px}
 .card p{color:#666;font-size:14px}
+.badge-pedidos{display:none;position:absolute;top:10px;right:10px;background:#c62828;color:#fff;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:bold;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .back{display:inline-block;margin-top:30px;padding:12px 20px;background:#222;color:white;text-decoration:none;border-radius:6px}
 </style>
 </head>
@@ -51,9 +52,10 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <p>Editar y eliminar productos</p>
 </a>
 <a href="gestionar-pedidos.html" class="card">
+<div id="badgePedidos" class="badge-pedidos">0</div>
 <div class="card-icon">📋</div>
 <h2>Gestionar pedidos</h2>
-<p>Revisar pedidos, pagos, envíos y entregas</p>
+<p id="textoPedidos">Revisar pedidos, pagos, envíos y entregas</p>
 </a>
 
 <!-- Categorías se administrarán desde una sola pantalla -->
@@ -96,6 +98,78 @@ document.getElementById("btnIngresarAdmin").addEventListener("click",ingresarAdm
 document.getElementById("claveAdmin").addEventListener("keydown",function(e){
     if(e.key==="Enter") ingresarAdmin();
 });
+
+function claveRevisionPedido(idPedido){
+    return "rhino_revision_pedido_"+String(idPedido||"").trim().toUpperCase();
+}
+function fechaMilisegundos(valor){
+    if(!valor) return 0;
+    const fecha=new Date(valor);
+    const tiempo=fecha.getTime();
+    return Number.isFinite(tiempo)?tiempo:0;
+}
+function tieneActividadNueva(pedido){
+    const id=String(pedido.id_pedido||"").trim();
+    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
+    if(!id||!ultima) return false;
+    const guardado=Number(localStorage.getItem(claveRevisionPedido(id))||0);
+    if(guardado>0) return ultima>guardado;
+    const fechaPedido=fechaMilisegundos(pedido.fecha_pedido);
+    return fechaPedido>0 && ultima>fechaPedido+60000;
+}
+function pedidoRequiereAtencion(pedido){
+    const estadoPedido=String(pedido.estado_pedido||"").trim().toUpperCase();
+    const estadoPago=String(pedido.estado_pago||"").trim().toUpperCase();
+    const devolucion=String(pedido.estado_devolucion||"").trim().toUpperCase();
+    const reactivacion=String(pedido.solicitud_reactivacion||"").trim().toUpperCase();
+
+    if(estadoPago==="EN VERIFICACIÓN") return true;
+    if(devolucion&&devolucion!=="DEVUELTO"&&devolucion!=="COMPLETADO") return true;
+    if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO") return true;
+
+    const id=String(pedido.id_pedido||"").trim();
+    const revision= id ? Number(localStorage.getItem(claveRevisionPedido(id))||0) : 0;
+    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
+    const yaRevisado=revision>0&&(!ultima||revision>=ultima);
+
+    if((estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido)&&!yaRevisado) return true;
+    return tieneActividadNueva(pedido);
+}
+function actualizarIndicadorPedidos(){
+    const token=sessionStorage.getItem("tokenAdmin")||"";
+    if(!token) return;
+
+    const datos=new URLSearchParams();
+    datos.append("accion","listarPedidos");
+    datos.append("tokenAdmin",token);
+
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(!resultado.autorizado) return;
+        if(!resultado.ok) return;
+
+        const pedidos=resultado.pedidos||[];
+        const cantidad=pedidos.filter(pedidoRequiereAtencion).length;
+        const badge=document.getElementById("badgePedidos");
+        const texto=document.getElementById("textoPedidos");
+
+        if(cantidad>0){
+            badge.textContent=cantidad===1?"🔴 1 novedad":"🔴 "+cantidad+" novedades";
+            badge.style.display="block";
+            texto.textContent=cantidad===1
+                ?"1 pedido requiere atención"
+                :cantidad+" pedidos requieren atención";
+        }else{
+            badge.style.display="none";
+            texto.textContent="Revisar pedidos, pagos, envíos y entregas";
+        }
+    })
+    .catch(function(error){
+        console.error("No se pudo actualizar el indicador de pedidos:",error);
+    });
+}
+
 function ingresarAdmin(){
     const clave=document.getElementById("claveAdmin").value;
     const mensaje=document.getElementById("mensajeAcceso");
@@ -115,6 +189,7 @@ function ingresarAdmin(){
             sessionStorage.setItem("tokenAdmin",resultado.token);
             document.getElementById("accesoAdmin").style.display="none";
             document.getElementById("panelAdmin").style.display="block";
+            actualizarIndicadorPedidos();
         }else{
             mensaje.style.color="#ff6b6b";
             mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";
