@@ -717,11 +717,11 @@ function enviarNotaWhatsApp(indice){
         return;
     }
     const numeroNota=String(pedido.numero_nota||"Nota de Venta").trim();
-    const mensaje="RHINO TACTICAL ARMOR\n\n"+
+    const mensaje="🦏 *RHINO TACTICAL ARMOR* 🦏\n\n"+
         "Su pedido "+String(pedido.id_pedido||"")+" fue entregado correctamente.\n"+
         "Gracias por confiar en nosotros.\n\n"+
-        "📄 Descargar Nota de Venta "+numeroNota+":\n"+url+"\n\n"+
-        "PROTECCIÓN · RESISTENCIA · CONFIANZA";
+        "📄 *Descargar Nota de Venta "+numeroNota+":*\n"+url+"\n\n"+
+        "_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
     window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
 }
 
