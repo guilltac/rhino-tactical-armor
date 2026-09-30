@@ -370,6 +370,16 @@ th:nth-child(7),td:nth-child(7){width:30%;}
 
 <body>
 
+
+<div id="modalDocumentoRhino" role="dialog" aria-modal="true" aria-label="Vista de documento" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,.75);padding:16px;">
+ <div style="background:white;max-width:1100px;height:92vh;margin:auto;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#151515;color:white;">
+   <strong id="tituloDocumentoRhino">Documento</strong>
+   <button id="cerrarDocumentoRhino" type="button" onclick="cerrarDocumentoFlotante()" aria-label="Cerrar documento" style="font-size:22px;">✕</button>
+  </div>
+  <iframe id="visorDocumentoRhino" title="Documento del pedido" referrerpolicy="no-referrer" style="width:100%;flex:1;border:0;background:#eee;"></iframe>
+ </div>
+</div>
 <script>
 if (!sessionStorage.getItem("tokenAdmin")) {
     window.location.replace("admin.html");
@@ -635,52 +645,37 @@ function fechaMilisegundos(valor){
     return Number.isFinite(tiempo)?tiempo:0;
 }
 
+function firmaNovedadPedido(pedido){
+    return JSON.stringify([pedido.ultima_actualizacion||"",pedido.estado_pedido||"",pedido.estado_pago||"",pedido.comprobante_pago||"",pedido.fecha_comprobante||"",pedido.estado_devolucion||"",pedido.solicitud_reactivacion||"",pedido.fecha_solicitud_reactivacion||"",pedido.fecha_solicitud_devolucion||""]);
+}
+function pedidoYaRevisado(pedido){
+    const clave=claveRevisionPedido(pedido.id_pedido)+"_firma";
+    return localStorage.getItem(clave)===firmaNovedadPedido(pedido);
+}
 function tieneActividadNueva(pedido){
-    const id=String(pedido.id_pedido||"").trim();
+    if(pedidoYaRevisado(pedido)) return false;
+    const anterior=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
+    if(anterior!==null) return true;
     const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
-    if(!id||!ultima) return false;
-
-    const guardado=Number(localStorage.getItem(claveRevisionPedido(id))||0);
-    if(guardado>0) return ultima>guardado;
-
-    const fechaPedido=fechaMilisegundos(pedido.fecha_pedido);
-    return fechaPedido>0 && ultima>fechaPedido+60000;
+    const fecha=fechaMilisegundos(pedido.fecha_pedido);
+    return ultima>0&&fecha>0&&ultima>fecha+60000;
 }
-
 function marcarPedidoRevisado(pedido){
-    if(!pedido) return;
-    const id=String(pedido.id_pedido||"").trim();
-    if(!id) return;
-    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
-    localStorage.setItem(claveRevisionPedido(id),String(ultima||Date.now()));
+    if(!pedido||!pedido.id_pedido) return;
+    localStorage.setItem(claveRevisionPedido(pedido.id_pedido),String(fechaMilisegundos(pedido.ultima_actualizacion)||Date.now()));
+    localStorage.setItem(claveRevisionPedido(pedido.id_pedido)+"_firma",firmaNovedadPedido(pedido));
 }
-
 function obtenerAlertaPedido(pedido){
+    if(pedidoYaRevisado(pedido)) return null;
     const estadoPedido=String(pedido.estado_pedido||"").trim().toUpperCase();
     const estadoPago=String(pedido.estado_pago||"").trim().toUpperCase();
     const devolucion=String(pedido.estado_devolucion||"").trim().toUpperCase();
     const reactivacion=String(pedido.solicitud_reactivacion||"").trim().toUpperCase();
-
-    if(estadoPago==="EN VERIFICACIÓN"){
-        return {texto:"🟠 COMPROBANTE NUEVO",clase:"alerta-comprobante"};
-    }
-    if(devolucion&&devolucion!=="DEVUELTO"&&devolucion!=="COMPLETADO"){
-        return {texto:"💰 DEVOLUCIÓN PENDIENTE",clase:"alerta-devolucion"};
-    }
-    if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO"){
-        return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
-    }
-    const idRevision=String(pedido.id_pedido||"").trim();
-    const revisionGuardada=idRevision ? Number(localStorage.getItem(claveRevisionPedido(idRevision))||0) : 0;
-    const ultimaRevision=fechaMilisegundos(pedido.ultima_actualizacion);
-    const yaRevisado=revisionGuardada>0 && (!ultimaRevision || revisionGuardada>=ultimaRevision);
-
-    if((estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido) && !yaRevisado){
-        return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
-    }
-    if(tieneActividadNueva(pedido)){
-        return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
-    }
+    if(estadoPago==="EN VERIFICACIÓN") return {texto:"🟠 COMPROBANTE NUEVO",clase:"alerta-comprobante"};
+    if(devolucion&&devolucion!=="DEVUELTO"&&devolucion!=="COMPLETADO") return {texto:"💰 DEVOLUCIÓN PENDIENTE",clase:"alerta-devolucion"};
+    if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO") return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
+    if(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido) return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
+    if(tieneActividadNueva(pedido)) return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
     return null;
 }
 
@@ -697,7 +692,7 @@ function obtenerUrlVistaNota(url){
 function verNotaVenta(url){
     const vista=obtenerUrlVistaNota(url);
     if(!vista) return;
-    window.open(vista,"_blank","noopener");
+    abrirDocumentoFlotante(vista,"Nota de venta");
 }
 
 function descargarNotaVenta(url){
@@ -1032,6 +1027,29 @@ function mostrarPedidos(){
     tablaContenedor.style.display="block";
 }
 
+let focoAnteriorDocumentoRhino=null;
+function abrirDocumentoFlotante(url,titulo){
+    let parsed;
+    try{parsed=new URL(String(url||""));}catch(error){alert("Enlace no válido.");return;}
+    if(parsed.protocol!=="https:"&&parsed.protocol!=="http:"){alert("Enlace no válido.");return;}
+    let vista=parsed.href;
+    if(parsed.hostname==="drive.google.com"){
+        const ruta=parsed.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const id=ruta?ruta[1]:parsed.searchParams.get("id");
+        if(id&&/^[a-zA-Z0-9_-]+$/.test(id)) vista="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview";
+    }
+    focoAnteriorDocumentoRhino=document.activeElement;
+    document.getElementById("tituloDocumentoRhino").textContent=titulo||"Documento";
+    document.getElementById("visorDocumentoRhino").src=vista;
+    document.getElementById("modalDocumentoRhino").style.display="block";
+    document.getElementById("cerrarDocumentoRhino").focus();
+}
+function cerrarDocumentoFlotante(){
+    document.getElementById("modalDocumentoRhino").style.display="none";
+    document.getElementById("visorDocumentoRhino").src="about:blank";
+    if(focoAnteriorDocumentoRhino&&focoAnteriorDocumentoRhino.isConnected) focoAnteriorDocumentoRhino.focus();
+}
+
 function comprobantePagoHtml(valor){
     const texto=String(valor||"").trim();
     if(!texto) return dato("Comprobante","Sin comprobante");
@@ -1048,7 +1066,7 @@ function comprobantePagoHtml(valor){
         }
     }
     return "<div class='dato'><strong>Comprobante</strong><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;'>"+
-        "<a class='btn-ver' style='padding:10px 14px;border-radius:6px;text-decoration:none;' href='"+escapar(ver)+"' target='_blank' rel='noopener noreferrer'>👁️ VER</a>"+
+        "<button type='button' class='btn-ver' data-url='"+escapar(ver)+"' onclick='abrirDocumentoFlotante(this.dataset.url,\"Comprobante de pago\")'>👁️ VER</button>"+
         "<a class='btn-descargar' style='padding:10px 14px;border-radius:6px;text-decoration:none;' href='"+escapar(descargar)+"' target='_blank' rel='noopener noreferrer'>⬇️ DESCARGAR</a></div></div>";
 }
 
@@ -1862,13 +1880,15 @@ document.addEventListener(
     function(event){
 
         if(event.key === "Escape"){
-            cerrarPedido();
+            if(document.getElementById("modalDocumentoRhino").style.display==="block") cerrarDocumentoFlotante();
+            else cerrarPedido();
         }
 
     }
 );
 
 
+document.getElementById("modalDocumentoRhino").addEventListener("click",function(event){if(event.target===this) cerrarDocumentoFlotante();});
 cargarPedidos();
 
 </script>
