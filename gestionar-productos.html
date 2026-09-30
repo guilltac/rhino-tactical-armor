@@ -798,13 +798,14 @@ function imprimirEtiqueta(id){
     if(!Number.isInteger(cantidad)||cantidad<1||cantidad>100){
         alert("Introduce una cantidad entera entre 1 y 100.");return;
     }
-    const tamano=prompt("Tamaño de etiqueta en milímetros: escribe 1 para 60 × 40 o 2 para 80 × 50.","1");
+    const tamano=prompt("Selecciona el formato:\n1 = Individual 60 × 40 mm (térmica)\n2 = Individual 80 × 50 mm (térmica)\n3 = Hoja carta 60 × 40 mm (Epson)\n4 = Hoja carta 80 × 50 mm (Epson)","3");
     if(tamano===null){return;}
-    if(tamano!=="1"&&tamano!=="2"){
-        alert("Selecciona 1 o 2.");return;
+    if(!["1","2","3","4"].includes(tamano)){
+        alert("Selecciona una opción entre 1 y 4.");return;
     }
-    const ancho=tamano==="1"?60:80;
-    const alto=tamano==="1"?40:50;
+    const hojaCarta=tamano==="3"||tamano==="4";
+    const ancho=(tamano==="1"||tamano==="3")?60:80;
+    const alto=(tamano==="1"||tamano==="3")?40:50;
     let barras;
     try{barras=crearCodigoBarras(producto.id);}catch(error){alert(error.message);return;}
     const precioNumero=Number(String(producto.precio||0).replace(",","."));
@@ -813,36 +814,43 @@ function imprimirEtiqueta(id){
         : String(producto.precio||"");
     const nombre=escapar(producto.nombre||"PRODUCTO");
     const codigo=escapar(String(producto.id).toUpperCase());
-    const etiquetas=Array.from({length:cantidad},function(){
+    const logoUrl=escapar(new URL("logo-rhino.png",window.location.href).href);
+    const etiquetasArray=Array.from({length:cantidad},function(){
         return '<div class="etiqueta">'+
-            '<div class="marca"><img src="logo-rhino.png" alt="" onerror="this.style.display=\'none\'">'+
+            '<div class="marca"><img src="'+logoUrl+'" alt="" onerror="this.style.display=\'none\'">'+
             '<span>RHINO TACTICAL ARMOR</span></div>'+
             '<div class="nombre">'+nombre+'</div>'+
             '<div class="precio">Bs '+escapar(precio)+'</div>'+
             '<div class="barras">'+barras+'</div>'+
             '<div class="codigo">'+codigo+'</div>'+
             '</div>';
-    }).join("");
+    });
+    const porPagina=ancho===60?18:10;
+    const etiquetas=hojaCarta
+        ? Array.from({length:Math.ceil(cantidad/porPagina)},function(_,indice){
+            return '<div class="hoja">'+etiquetasArray.slice(indice*porPagina,(indice+1)*porPagina).join("")+'</div>';
+          }).join("")
+        : etiquetasArray.join("");
     const ventana=window.open("","_blank");
     if(!ventana){alert("Permite las ventanas emergentes para imprimir etiquetas.");return;}
     ventana.document.open();
     ventana.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'+
         '<title>Etiquetas RHINO - '+codigo+'</title><style>'+
-        '@page{size:'+ancho+'mm '+alto+'mm;margin:0}'+
+        '@page{size:'+(hojaCarta?'letter; margin:10mm':ancho+'mm '+alto+'mm;margin:0')+'}'+
         '*{box-sizing:border-box}body{margin:0;background:white;color:#111;font-family:Arial,sans-serif}'+
-        '.etiqueta{width:'+ancho+'mm;height:'+alto+'mm;padding:2mm 3mm;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;break-after:page;page-break-after:always}'+
-        '.etiqueta:last-child{break-after:auto;page-break-after:auto}'+
+        '.etiqueta{width:'+ancho+'mm;height:'+alto+'mm;padding:2mm 3mm;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;'+(hojaCarta?'border:0.2mm dashed #bbb':'break-after:page;page-break-after:always')+'}'+
+        (hojaCarta?'.hoja{display:grid;grid-template-columns:repeat('+(ancho===60?3:2)+','+ancho+'mm);grid-auto-rows:'+alto+'mm;column-gap:3mm;row-gap:'+(ancho===60?3:2)+'mm;justify-content:center;break-after:page;page-break-after:always}.hoja:last-child{break-after:auto;page-break-after:auto}':'.etiqueta:last-child{break-after:auto;page-break-after:auto}')+
         '.marca{display:flex;align-items:center;justify-content:center;gap:2mm;font-size:9px;font-weight:900;white-space:nowrap}'+
         '.marca img{height:7mm;max-width:10mm;object-fit:contain}'+
         '.nombre{font-size:'+(ancho===60?10:12)+'px;font-weight:bold;text-align:center;line-height:1.1;max-height:9mm;overflow:hidden}'+
         '.precio{font-size:14px;font-weight:900}'+
         '.barras{width:95%;height:11mm}.barras svg{display:block;width:100%;height:100%;fill:#000}'+
         '.codigo{font-size:10px;font-weight:bold;letter-spacing:1px}'+
-        '@media screen{body{background:#eee}.etiqueta{background:white;margin:8mm auto;box-shadow:0 1px 8px #aaa}}'+
+        '@media screen{body{background:#eee}.etiqueta{background:white;'+(hojaCarta?'':'margin:8mm auto;')+'box-shadow:0 1px 8px #aaa}.hoja{background:white;margin:8mm auto;padding:10mm;width:216mm;min-height:279mm;box-shadow:0 1px 8px #aaa}}'+
         '</style></head><body>'+etiquetas+'</body></html>');
     ventana.document.close();
     ventana.focus();
-    // Se abre una vista previa; el usuario controla la impresión desde el navegador.
+    // El usuario controla la impresión desde el navegador.
 }
 
 /* =========================
