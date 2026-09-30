@@ -748,7 +748,14 @@ function enviarMensajeClienteWhatsApp(indice,estadoForzado){
     mensaje+="Gracias por confiar en RHINO TACTICAL ARMOR.\n"+
         "_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
 
-    window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+    const textoWhatsApp=encodeURIComponent(mensaje);
+    const esMovil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if(esMovil){
+        window.location.href="whatsapp://send?phone="+telefono+"&text="+textoWhatsApp;
+    }else{
+        window.open("https://web.whatsapp.com/send?phone="+telefono+"&text="+textoWhatsApp,"_blank","noopener");
+    }
 }
 
 
@@ -773,7 +780,14 @@ function enviarNotaWhatsApp(indice){
         "Gracias por confiar en nosotros.\n\n"+
         "📄 *Descargar Nota de Venta "+numeroNota+":*\n"+url+"\n\n"+
         "_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
-    window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
+    const textoWhatsApp=encodeURIComponent(mensaje);
+    const esMovil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if(esMovil){
+        window.location.href="whatsapp://send?phone="+telefono+"&text="+textoWhatsApp;
+    }else{
+        window.open("https://web.whatsapp.com/send?phone="+telefono+"&text="+textoWhatsApp,"_blank","noopener");
+    }
 }
 
 function formatearTelefonoVisual(telefono){
