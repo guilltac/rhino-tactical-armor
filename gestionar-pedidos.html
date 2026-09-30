@@ -786,14 +786,52 @@ function confirmarPagoYWhatsApp(indice){
 function rechazarComprobantePedido(indice){
     const pedido=pedidosCargados[indice];
     if(!pedido) return;
-    const idPedido=String(pedido.id_pedido||"").trim();
-
-    ejecutarAccionPago(
-        "rechazarComprobantePedido",
-        indice,
-        "¿Rechazar este comprobante?\n\nEl pago volverá a PENDIENTE y el cliente podrá cargar un nuevo archivo.\n\nPedido: " + idPedido,
-        false
-    );
+    const motivo=String(document.getElementById("motivoNoConfirmado").value||"").trim();
+    if(motivo.length<5||motivo.length>1000){
+        alert("Escribe el motivo (de 5 a 1000 caracteres) antes de continuar.");
+        return;
+    }
+    if(!confirm("¿Guardar el pago como no confirmado y preparar el aviso al cliente?\n\nMotivo: "+motivo)) return;
+    // Open synchronously so the browser can associate the window with the click.
+    const aviso=window.open("about:blank","_blank");
+    if(aviso) aviso.opener=null;
+    bloquearBotonesPago(true);
+    const datos=new URLSearchParams();
+    datos.append("accion","rechazarComprobantePedido");
+    datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
+    datos.append("id_pedido",pedido.id_pedido);
+    datos.append("motivo_no_confirmado",motivo);
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(r=>r.json())
+    .then(function(resultado){
+        if(!resultado.autorizado){
+            sessionStorage.removeItem("tokenAdmin");
+            if(aviso) aviso.close();
+            alert(resultado.mensaje||"La sesión administrativa venció.");
+            window.location.replace("admin.html");
+            return;
+        }
+        if(!resultado.ok) throw new Error(resultado.mensaje||"No se pudo guardar el motivo.");
+        let telefono=String(pedido.telefono||"").replace(/[^\d]/g,"");
+        if(telefono.startsWith("00")) telefono=telefono.slice(2);
+        if(telefono.length===8) telefono="591"+telefono;
+        const mensaje="🦏 *RHINO TACTICAL ARMOR*\n\nNo pudimos confirmar el pago de tu pedido *"+pedido.id_pedido+"*.\n\n*Motivo:* "+motivo+"\n\nPor favor, revisa los datos y comunícate con nosotros para aclararlo. Puedes cargar el comprobante correcto desde *SEGUIR MI PEDIDO*.\n\n_PROTECCIÓN · RESISTENCIA · CONFIANZA_";
+        if(telefono.length>=10&&telefono.length<=15){
+            const url="https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje);
+            if(aviso) aviso.location.replace(url);
+            else window.location.href=url;
+            alert("Motivo guardado. Pulsa Enviar en WhatsApp para avisar al cliente.");
+        }else{
+            if(aviso) aviso.close();
+            alert("Motivo guardado, pero el teléfono no es válido. Revisa el contacto para avisar al cliente.");
+        }
+        cerrarPedido();
+        cargarPedidos();
+    }).catch(function(error){
+        if(aviso) aviso.close();
+        alert("❌ "+error.message);
+        bloquearBotonesPago(false);
+    });
 }
 
 function enviarConfirmacionPagoWhatsApp(indice){
@@ -994,6 +1032,52 @@ function mostrarPedidos(){
     tablaContenedor.style.display="block";
 }
 
+function comprobantePagoHtml(valor){
+    const texto=String(valor||"").trim();
+    if(!texto) return dato("Comprobante","Sin comprobante");
+    let url;
+    try { url=new URL(texto); } catch(error) { return dato("Comprobante","Enlace no válido"); }
+    if(url.protocol!=="https:"&&url.protocol!=="http:") return dato("Comprobante","Enlace no válido");
+    let ver=url.href, descargar=url.href;
+    if(url.hostname==="drive.google.com"){
+        const ruta=url.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const id=ruta?ruta[1]:url.searchParams.get("id");
+        if(id&&/^[a-zA-Z0-9_-]+$/.test(id)){
+            ver="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/view";
+            descargar="https://drive.google.com/uc?export=download&id="+encodeURIComponent(id);
+        }
+    }
+    return "<div class='dato'><strong>Comprobante</strong><div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;'>"+
+        "<a class='btn-ver' style='padding:10px 14px;border-radius:6px;text-decoration:none;' href='"+escapar(ver)+"' target='_blank' rel='noopener noreferrer'>👁️ VER</a>"+
+        "<a class='btn-descargar' style='padding:10px 14px;border-radius:6px;text-decoration:none;' href='"+escapar(descargar)+"' target='_blank' rel='noopener noreferrer'>⬇️ DESCARGAR</a></div></div>";
+}
+
+function actualizarBotonesEstadoPedido(){
+    const selector=document.getElementById("nuevoEstadoPedido");
+    if(!selector) return;
+    const iguales=selector.value.trim().toUpperCase()===String(selector.dataset.estadoActual||"").trim().toUpperCase();
+    const bloqueado=iguales||selector.dataset.guardando==="si";
+    ["btnGuardarEstadoPedido","btnGuardarAvisarPedido"].forEach(function(id){
+        const boton=document.getElementById(id);
+        if(boton){ boton.disabled=bloqueado; boton.style.opacity=bloqueado?"0.5":"1"; boton.style.cursor=bloqueado?"not-allowed":"pointer"; }
+    });
+}
+function iniciarGuardadoEstadoPedido(){
+    const selector=document.getElementById("nuevoEstadoPedido");
+    if(!selector) return false;
+    if(selector.dataset.guardando==="si") return false;
+    if(selector.value.trim().toUpperCase()===String(selector.dataset.estadoActual||"").trim().toUpperCase()){
+        alert("El pedido ya tiene ese estado. Selecciona uno diferente.");
+        return false;
+    }
+    return true;
+}
+function bloquearGuardadoEstadoPedido(bloquear){
+    const selector=document.getElementById("nuevoEstadoPedido");
+    if(selector){selector.dataset.guardando=bloquear?"si":"no";selector.disabled=!!bloquear;}
+    actualizarBotonesEstadoPedido();
+}
+
 function dato(titulo, valor){
 
     return (
@@ -1114,14 +1198,16 @@ function verPedido(indice){
             ) +
 
             dato(
+                "Motivo del pago no confirmado",
+                p.motivo_no_confirmado
+            ) +
+
+            dato(
                 "Estado de pago",
                 p.estado_pago
             ) +
 
-            dato(
-                "Comprobante",
-                p.comprobante_pago
-            ) +
+            comprobantePagoHtml(p.comprobante_pago) +
 
             dato(
                 "Fecha comprobante",
@@ -1162,10 +1248,19 @@ function verPedido(indice){
         html +=
             "<div style='margin-top:14px;padding:14px;border:1px solid #e0a800;border-radius:8px;background:#fff8df;'>" +
                 "<div style='font-weight:bold;margin-bottom:10px;'>⏳ COMPROBANTE EN VERIFICACIÓN</div>" +
+                "<label for='motivoNoConfirmado'>Motivo del pago no confirmado (obligatorio para rechazar)</label>" +
+                "<select onchange='document.getElementById(\"motivoNoConfirmado\").value=this.value' style='display:block;width:100%;margin:8px 0;padding:8px;'>" +
+                "<option value=''>Selecciona un motivo o escribe uno</option>" +
+                "<option>El depósito corresponde a otra cuenta o destinatario.</option>" +
+                "<option>El monto del comprobante no coincide con el total del pedido.</option>" +
+                "<option>El comprobante es ilegible o tiene datos incompletos.</option>" +
+                "<option>No se encontró el depósito en la cuenta de la tienda.</option>" +
+                "<option value=''>Otro motivo: escríbelo debajo</option></select>" +
+                "<textarea id='motivoNoConfirmado' maxlength='1000' rows='3' placeholder='Explica al cliente qué debe revisar' style='width:100%;padding:8px;margin-bottom:10px;'></textarea>" +
                 "<div style='display:flex;gap:8px;flex-wrap:wrap;'>" +
                     "<button type='button' id='btnConfirmarPago' class='btn-guardar' onclick='confirmarPagoPedido("+indice+")'>✅ CONFIRMAR PAGO</button>" +
                     "<button type='button' id='btnConfirmarAvisarPago' class='btn-whatsapp' onclick='confirmarPagoYWhatsApp("+indice+")'>📱 CONFIRMAR + AVISAR</button>" +
-                    "<button type='button' id='btnRechazarPago' class='btn-cancelar' onclick='rechazarComprobantePedido("+indice+")'>❌ RECHAZAR COMPROBANTE</button>" +
+                    "<button type='button' id='btnRechazarPago' class='btn-cancelar' onclick='rechazarComprobantePedido("+indice+")'>❌ NO CONFIRMAR + AVISAR</button>" +
                 "</div>" +
             "</div>";
     }
@@ -1242,7 +1337,7 @@ function verPedido(indice){
 
             "<label for='nuevoEstadoPedido'>Nuevo estado</label>" +
 
-            "<select id='nuevoEstadoPedido'>" +
+            "<select id='nuevoEstadoPedido' data-estado-actual='"+escapar(String(p.estado_pedido||""))+"' onchange='actualizarBotonesEstadoPedido()'>" +
                 opcionEstado("PEDIDO RECIBIDO", p.estado_pedido) +
                 opcionEstado("PREPARANDO", p.estado_pedido) +
                 opcionEstado("ENVIADO", p.estado_pedido) +
@@ -1339,6 +1434,7 @@ function verPedido(indice){
     .getElementById("modalPedido")
     .style.display = "block";
 
+    actualizarBotonesEstadoPedido();
     consultarVerificacionPolicialPedido(p);
 
 }
@@ -1369,6 +1465,7 @@ function guardarEstadoYWhatsApp(idPedido,indice){
 
     if(!selector||!idPedido) return;
 
+    if(!iniciarGuardadoEstadoPedido()) return;
     const nuevoEstado=selector.value;
 
     if(!confirm(
@@ -1382,6 +1479,7 @@ function guardarEstadoYWhatsApp(idPedido,indice){
         boton.textContent="Guardando...";
     }
 
+    bloquearGuardadoEstadoPedido(true);
     const datos=new URLSearchParams();
     datos.append("accion","actualizarEstadoPedido");
     datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
@@ -1411,6 +1509,7 @@ function guardarEstadoYWhatsApp(idPedido,indice){
         cargarPedidos();
     })
     .catch(function(error){
+        bloquearGuardadoEstadoPedido(false);
         console.error(error);
         alert("❌ No se pudo actualizar el estado del pedido.\n\n"+error.message);
         if(boton){
@@ -1433,6 +1532,7 @@ function guardarEstadoPedido(idPedido){
         return;
     }
 
+    if(!iniciarGuardadoEstadoPedido()) return;
     const nuevoEstado =
         selector.value;
 
@@ -1449,6 +1549,7 @@ function guardarEstadoPedido(idPedido){
         boton.textContent = "Guardando...";
     }
 
+    bloquearGuardadoEstadoPedido(true);
     const datos =
         new URLSearchParams();
 
@@ -1520,6 +1621,7 @@ function guardarEstadoPedido(idPedido){
     })
     .catch(function(error){
 
+        bloquearGuardadoEstadoPedido(false);
         console.error(error);
 
         alert(
