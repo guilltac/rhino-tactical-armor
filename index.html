@@ -3806,7 +3806,7 @@
                                     document.createElement("option");
 
                                 elemento.value = opcion;
-                                elemento.textContent = opcion;
+                                elemento.textContent = opcion === "Envío a domicilio" ? "Envío a domicilio (costo adicional)" : opcion;
 
                                 entrega.appendChild(elemento);
 
