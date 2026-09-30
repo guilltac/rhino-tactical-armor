@@ -706,7 +706,7 @@ function descargarNotaVenta(url){
     window.open(descarga,"_blank","noopener");
 }
 
-function enviarMensajeClienteWhatsApp(indice){
+function enviarMensajeClienteWhatsApp(indice,estadoForzado){
     const pedido=pedidosCargados[indice];
     if(!pedido) return;
 
@@ -720,12 +720,26 @@ function enviarMensajeClienteWhatsApp(indice){
     }
 
     const id=String(pedido.id_pedido||"").trim();
-    const estado=String(pedido.estado_pedido||"PEDIDO RECIBIDO").trim().toUpperCase();
+    const estado=String(estadoForzado||pedido.estado_pedido||"PEDIDO RECIBIDO").trim().toUpperCase();
     let mensaje="🦏 *RHINO TACTICAL ARMOR* 🦏\n\n";
 
     if(estado==="PEDIDO RECIBIDO"){
         mensaje+="Hemos recibido correctamente tu pedido *"+id+"*.\n\n"+
             "📦 Tu pedido se encuentra registrado y estamos a la espera de la confirmación correspondiente para continuar con su procesamiento.\n\n";
+    }else if(estado==="PREPARANDO"){
+        mensaje+="Tu pedido *"+id+"* ya se encuentra en preparación.\n\n"+
+            "📦 Te avisaremos cuando esté listo para la siguiente etapa.\n\n";
+    }else if(estado==="LISTO PARA RECOGER"){
+        mensaje+="Tu pedido *"+id+"* ya está *LISTO PARA RECOGER*.\n\n"+
+            "📦 Puedes coordinar el recojo con RHINO TACTICAL ARMOR.\n\n";
+    }else if(estado==="ENVIADO"){
+        mensaje+="Tu pedido *"+id+"* ha sido enviado.\n\n"+
+            "🚚 Te mantendremos informado sobre su entrega.\n\n";
+    }else if(estado==="ENTREGADO"){
+        mensaje+="Tu pedido *"+id+"* fue entregado correctamente.\n\n";
+    }else if(estado==="CANCELADO"){
+        mensaje+="Tu pedido *"+id+"* figura como *CANCELADO*.\n\n"+
+            "Si necesitas información adicional, puedes comunicarte con RHINO TACTICAL ARMOR.\n\n";
     }else{
         mensaje+="Información sobre tu pedido *"+id+"*.\n"+
             "📦 Estado actual: *"+estado+"*.\n\n";
@@ -1087,6 +1101,16 @@ function verPedido(indice){
                 ")'>" +
                 "💾 GUARDAR ESTADO" +
             "</button>" +
+            "<button " +
+                "type='button' " +
+                "id='btnGuardarAvisarPedido' " +
+                "class='btn-whatsapp' " +
+                "style='width:100%;margin-top:10px;' " +
+                "onclick='guardarEstadoYWhatsApp(" +
+                    JSON.stringify(String(p.id_pedido || "")) + "," + indice +
+                ")'>" +
+                "📱 GUARDAR ESTADO Y AVISAR POR WHATSAPP" +
+            "</button>" +
 
         "</div>" +
         "</div>";
@@ -1183,6 +1207,64 @@ function opcionEstado(valor, estadoActual){
         escapar(valor) +
         "</option>"
     );
+}
+
+
+function guardarEstadoYWhatsApp(idPedido,indice){
+    const selector=document.getElementById("nuevoEstadoPedido");
+    const boton=document.getElementById("btnGuardarAvisarPedido");
+
+    if(!selector||!idPedido) return;
+
+    const nuevoEstado=selector.value;
+
+    if(!confirm(
+        "¿Guardar el estado \""+nuevoEstado+"\" y preparar el aviso por WhatsApp para el cliente?"
+    )){
+        return;
+    }
+
+    if(boton){
+        boton.disabled=true;
+        boton.textContent="Guardando...";
+    }
+
+    const datos=new URLSearchParams();
+    datos.append("accion","actualizarEstadoPedido");
+    datos.append("tokenAdmin",sessionStorage.getItem("tokenAdmin")||"");
+    datos.append("id_pedido",idPedido);
+    datos.append("estado_pedido",nuevoEstado);
+
+    fetch(URL_SERVIDOR,{method:"POST",body:datos})
+    .then(function(respuesta){return respuesta.json();})
+    .then(function(resultado){
+        if(!resultado.autorizado){
+            sessionStorage.removeItem("tokenAdmin");
+            alert(resultado.mensaje||"La sesión administrativa venció.");
+            window.location.replace("admin.html");
+            return;
+        }
+
+        if(!resultado.ok){
+            throw new Error(resultado.mensaje||"No se pudo actualizar el estado.");
+        }
+
+        if(pedidosCargados[indice]){
+            pedidosCargados[indice].estado_pedido=nuevoEstado;
+        }
+
+        enviarMensajeClienteWhatsApp(indice,nuevoEstado);
+        cerrarPedido();
+        cargarPedidos();
+    })
+    .catch(function(error){
+        console.error(error);
+        alert("❌ No se pudo actualizar el estado del pedido.\n\n"+error.message);
+        if(boton){
+            boton.disabled=false;
+            boton.textContent="📱 GUARDAR ESTADO Y AVISAR POR WHATSAPP";
+        }
+    });
 }
 
 
