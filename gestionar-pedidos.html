@@ -160,7 +160,7 @@ td{
     color:white;
     white-space:nowrap;
 }
-.btn-imprimir{
+.btn-descargar{
     background:#555;
     color:white;
     white-space:nowrap;
@@ -308,6 +308,9 @@ td{
         padding:0 12px;
     }
 }
+.admin-brand{display:flex;align-items:center;justify-content:center;gap:14px;}
+.admin-brand img{width:88px;height:72px;object-fit:contain;}
+.admin-brand small{display:block;margin-top:5px;color:#8fcf69;font-size:10px;letter-spacing:1px;}
 </style>
 </head>
 
@@ -320,8 +323,14 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 </script>
 
 <header>
-    <h1>RHINO TACTICAL ARMOR</h1>
-    <p>Gestión de pedidos</p>
+    <div class="admin-brand">
+        <img src="logo-rhino.png" alt="RHINO TACTICAL ARMOR">
+        <div>
+            <h1>RHINO TACTICAL ARMOR</h1>
+            <p>Gestión de pedidos</p>
+            <small>PROTECCIÓN · RESISTENCIA · CONFIANZA</small>
+        </div>
+    </div>
 </header>
 
 <main class="container">
@@ -632,15 +641,10 @@ function verNotaVenta(url){
     window.open(vista,"_blank","noopener");
 }
 
-function imprimirNotaVenta(url){
-    const vista=obtenerUrlVistaNota(url);
-    if(!vista) return;
-    const ventana=window.open(vista,"_blank");
-    if(!ventana){
-        alert("El navegador bloqueó la ventana. Permite ventanas emergentes para abrir la Nota de Venta.");
-        return;
-    }
-    alert("Se abrirá la Nota de Venta. En el visor PDF selecciona Imprimir o presiona Ctrl+P.");
+function descargarNotaVenta(url){
+    const descarga=String(url||"").trim();
+    if(!descarga) return;
+    window.open(descarga,"_blank","noopener");
 }
 
 function mostrarPedidos(){
@@ -681,8 +685,8 @@ function mostrarPedidos(){
         if(notaDisponible){
             const url=JSON.stringify(String(pedido.url_nota_pdf||""));
             acciones+=
-                "<button type='button' class='btn-nota' onclick='verNotaVenta("+url+")'>📄 Nota</button>"+
-                "<button type='button' class='btn-imprimir' onclick='imprimirNotaVenta("+url+")'>🖨️ Imprimir</button>";
+                "<button type='button' class='btn-nota' onclick='verNotaVenta("+url+")'>📄 Ver / Imprimir</button>"+
+                "<button type='button' class='btn-descargar' onclick='descargarNotaVenta("+url+")'>⬇️ Descargar</button>";
         }
 
         acciones+="</div>";
@@ -1046,7 +1050,6 @@ function verPedido(indice){
 }
 
 
-
 function opcionEstado(valor, estadoActual){
 
     const seleccionado =
@@ -1178,7 +1181,6 @@ function guardarEstadoPedido(idPedido){
         }
     });
 }
-
 
 
 function verificarClientePolicial(idPedido){
