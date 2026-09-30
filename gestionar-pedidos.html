@@ -616,26 +616,31 @@ function obtenerAlertaPedido(pedido){
     return null;
 }
 
+function obtenerUrlVistaNota(url){
+    const texto=String(url||"").trim();
+    if(!texto) return "";
+    const coincidencia=texto.match(/[?&]id=([^&]+)/);
+    if(coincidencia&&coincidencia[1]) return "https://drive.google.com/file/d/"+encodeURIComponent(coincidencia[1])+"/view";
+    const ruta=texto.match(/\/file\/d\/([^/]+)/);
+    if(ruta&&ruta[1]) return "https://drive.google.com/file/d/"+encodeURIComponent(ruta[1])+"/view";
+    return texto;
+}
+
 function verNotaVenta(url){
-    if(!url) return;
-    window.open(url,"_blank","noopener");
+    const vista=obtenerUrlVistaNota(url);
+    if(!vista) return;
+    window.open(vista,"_blank","noopener");
 }
 
 function imprimirNotaVenta(url){
-    if(!url) return;
-    const ventana=window.open(url,"_blank");
+    const vista=obtenerUrlVistaNota(url);
+    if(!vista) return;
+    const ventana=window.open(vista,"_blank");
     if(!ventana){
-        alert("El navegador bloqueó la ventana de impresión. Permite ventanas emergentes para este sitio.");
+        alert("El navegador bloqueó la ventana. Permite ventanas emergentes para abrir la Nota de Venta.");
         return;
     }
-    setTimeout(function(){
-        try{
-            ventana.focus();
-            ventana.print();
-        }catch(error){
-            alert("Se abrió la Nota de Venta. Utiliza la opción Imprimir del visor PDF.");
-        }
-    },1800);
+    alert("Se abrirá la Nota de Venta. En el visor PDF selecciona Imprimir o presiona Ctrl+P.");
 }
 
 function mostrarPedidos(){
