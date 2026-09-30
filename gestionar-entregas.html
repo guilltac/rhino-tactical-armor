@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RHINO TACTICAL ARMOR - Gestionar entregas</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f2f2;color:#222;font-family:Arial,sans-serif}
+header{background:#151515;color:white;text-align:center;padding:22px 15px}
+header h1{font-size:24px;margin:0}header p{color:#bbb;margin:8px 0 0}
+main{max-width:800px;margin:25px auto;padding:0 16px}
+.volver{display:inline-block;color:white;background:#222;border-radius:6px;padding:11px 16px;text-decoration:none;margin-bottom:20px}
+.panel{background:white;border:1px solid #ddd;border-radius:10px;padding:22px}
+.nota{font-size:14px;color:#555;line-height:1.5}
+.fila{display:grid;grid-template-columns:1fr 160px;align-items:center;gap:14px;border-bottom:1px solid #eee;padding:13px 0}
+.fila label{font-weight:bold}.fila input{width:100%;padding:11px;border:1px solid #aaa;border-radius:6px;font-size:16px}
+.fija{background:#f6f6f6;border-radius:6px;padding:11px;text-align:center}
+button{padding:13px 20px;background:#5bb42d;border:0;border-radius:6px;font-weight:bold;cursor:pointer;margin-top:20px;font-size:15px}
+button:disabled{opacity:.55;cursor:wait}#mensaje{min-height:22px;margin-top:15px;font-weight:bold}
+@media(max-width:480px){.fila{grid-template-columns:1fr 125px}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<script>
+if(!sessionStorage.getItem('tokenAdmin'))window.location.replace('admin.html');
+</script>
+<header><h1>RHINO TACTICAL ARMOR</h1><p>🚚 Gestionar entregas</p></header>
+<main>
+<a class="volver" href="admin.html">← Volver al panel</a>
+<section class="panel">
+<h2>Tarifas de entrega a domicilio</h2>
+<p class="nota">Punto de partida provisional: Cruce de Villas, cerca del Teleférico Café, La Paz. Las tarifas se expresan en bolivianos (Bs). Los precios guardados aquí todavía no se aplican automáticamente a los pedidos.</p>
+<div id="tarifas"><p>Cargando tarifas...</p></div>
+<button id="guardar" type="button" onclick="guardarTarifas()" disabled>💾 Guardar tarifas</button>
+<div id="mensaje" role="status" aria-live="polite"></div>
+</section>
+</main>
+<script>
+const URL_SERVIDOR='https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec';
+const rangos=[[0,2],[2,4],[4,6],[6,8],[8,10]];
+const contenedor=document.getElementById('tarifas');
+const mensaje=document.getElementById('mensaje');
+const boton=document.getElementById('guardar');
+function mostrarMensaje(texto,error){mensaje.textContent=texto;mensaje.style.color=error?'#a51c1c':'#286c22';}
+function solicitar(accion,extras){
+ const token=sessionStorage.getItem('tokenAdmin');
+ if(!token){window.location.replace('admin.html');return Promise.reject(new Error('Sesión no disponible.'));}
+ const datos=new URLSearchParams();datos.append('accion',accion);datos.append('tokenAdmin',token);
+ Object.keys(extras||{}).forEach(k=>datos.append(k,extras[k]));
+ return fetch(URL_SERVIDOR,{method:'POST',body:datos}).then(r=>{if(!r.ok)throw new Error('Error de conexión: '+r.status);return r.json();}).then(r=>{
+  if(r.autorizado===false){sessionStorage.removeItem('tokenAdmin');window.location.replace('admin.html');throw new Error('Sesión vencida.');}
+  if(!r.ok)throw new Error(r.mensaje||'No se pudo completar la operación.');return r;
+ });
+}
+function dibujar(tarifas){
+ contenedor.replaceChildren();
+ rangos.forEach((r,i)=>{
+  const fila=document.createElement('div');fila.className='fila';
+  const etiqueta=document.createElement('label');etiqueta.htmlFor='precio'+i;etiqueta.textContent=(i===0?'De ':'Más de ')+r[0]+' a '+r[1]+' km';
+  const input=document.createElement('input');input.id='precio'+i;input.type='number';input.min='0';input.max='10000';input.step='0.01';input.required=true;
+  input.value=String(tarifas[i].precio_bs);
+  fila.append(etiqueta,input);contenedor.append(fila);
+ });
+ const fila=document.createElement('div');fila.className='fila';
+ const etiqueta=document.createElement('strong');etiqueta.textContent='Más de 10 km';
+ const valor=document.createElement('div');valor.className='fija';valor.textContent='A consultar';
+ fila.append(etiqueta,valor);contenedor.append(fila);
+ boton.disabled=false;
+}
+function cargarTarifas(){
+ boton.disabled=true;mostrarMensaje('',false);
+ solicitar('consultarTarifasEntrega').then(r=>{
+  if(!Array.isArray(r.tarifas)||r.tarifas.length<5)throw new Error('No se recibieron los cinco tramos de tarifas.');
+  dibujar(r.tarifas);
+ }).catch(e=>{contenedor.textContent='No se pudieron cargar las tarifas.';mostrarMensaje(e.message,true);});
+}
+function guardarTarifas(){
+ const tarifas=[];
+ for(let i=0;i<5;i++){
+  const campo=document.getElementById('precio'+i);
+  if(!campo||campo.value.trim()===''||!campo.checkValidity()){
+   mostrarMensaje('Revisa el precio del tramo '+(i+1)+'.',true);if(campo)campo.focus();return;
+  }
+  const precio=Number(campo.value);
+  if(!Number.isFinite(precio)||precio<0||precio>10000){mostrarMensaje('Precio no válido en el tramo '+(i+1)+'.',true);campo.focus();return;}
+  tarifas.push({desde_km:rangos[i][0],hasta_km:rangos[i][1],precio_bs:precio});
+ }
+ boton.disabled=true;mostrarMensaje('Guardando tarifas...',false);
+ solicitar('guardarTarifasEntrega',{tarifas:JSON.stringify(tarifas)}).then(r=>{
+  dibujar(r.tarifas);mostrarMensaje('✓ Tarifas guardadas correctamente en Google Sheets.',false);
+ }).catch(e=>mostrarMensaje(e.message,true)).finally(()=>{boton.disabled=false;});
+}
+cargarTarifas();
+</script>
+</body>
+</html>
