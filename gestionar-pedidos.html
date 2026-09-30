@@ -776,6 +776,17 @@ function enviarNotaWhatsApp(indice){
     window.open("https://wa.me/"+telefono+"?text="+encodeURIComponent(mensaje),"_blank","noopener");
 }
 
+function formatearTelefonoVisual(telefono){
+    const original=String(telefono||"").trim();
+    const digitos=original.replace(/\D/g,"");
+    if(!digitos) return original;
+    if(digitos.length===11 && digitos.startsWith("591")){
+        return "+591 "+digitos.slice(3);
+    }
+    return original;
+}
+
+
 function mostrarPedidos(){
 
     const cuerpo=document.getElementById("tablaPedidos");
@@ -889,7 +900,7 @@ function verPedido(indice){
         "<div class='datos'>" +
 
             dato("Nombre", p.cliente) +
-            dato("Teléfono", p.telefono) +
+            dato("Teléfono", formatearTelefonoVisual(p.telefono)) +
             dato("CI", p.ci) +
             dato("Departamento", p.departamento) +
             dato("Dirección", p.direccion) +
@@ -1092,25 +1103,28 @@ function verPedido(indice){
                 opcionEstado("CANCELADO", p.estado_pedido) +
             "</select>" +
 
-            "<button " +
-                "type='button' " +
-                "id='btnGuardarEstadoPedido' " +
-                "class='btn-guardar-estado' " +
-                "onclick='guardarEstadoPedido(" +
-                    JSON.stringify(String(p.id_pedido || "")) +
-                ")'>" +
-                "💾 GUARDAR ESTADO" +
-            "</button>" +
-            "<button " +
-                "type='button' " +
-                "id='btnGuardarAvisarPedido' " +
-                "class='btn-whatsapp' " +
-                "style='width:100%;margin-top:10px;' " +
-                "onclick='guardarEstadoYWhatsApp(" +
-                    JSON.stringify(String(p.id_pedido || "")) + "," + indice +
-                ")'>" +
-                "📱 GUARDAR ESTADO Y AVISAR POR WHATSAPP" +
-            "</button>" +
+            "<div style='display:flex;gap:10px;align-items:stretch;'>" +
+                "<button " +
+                    "type='button' " +
+                    "id='btnGuardarEstadoPedido' " +
+                    "class='btn-guardar-estado' " +
+                    "style='flex:1;min-width:0;' " +
+                    "onclick='guardarEstadoPedido(" +
+                        JSON.stringify(String(p.id_pedido || "")) +
+                    ")'>" +
+                    "💾 GUARDAR ESTADO" +
+                "</button>" +
+                "<button " +
+                    "type='button' " +
+                    "id='btnGuardarAvisarPedido' " +
+                    "class='btn-whatsapp' " +
+                    "style='flex:1;min-width:0;' " +
+                    "onclick='guardarEstadoYWhatsApp(" +
+                        JSON.stringify(String(p.id_pedido || "")) + "," + indice +
+                    ")'>" +
+                    "📱 GUARDAR + AVISAR" +
+                "</button>" +
+            "</div>" +
 
         "</div>" +
         "</div>";
@@ -1253,7 +1267,7 @@ function guardarEstadoYWhatsApp(idPedido,indice){
         alert("❌ No se pudo actualizar el estado del pedido.\n\n"+error.message);
         if(boton){
             boton.disabled=false;
-            boton.textContent="📱 GUARDAR ESTADO Y AVISAR POR WHATSAPP";
+            boton.textContent="📱 GUARDAR + AVISAR";
         }
     });
 }
