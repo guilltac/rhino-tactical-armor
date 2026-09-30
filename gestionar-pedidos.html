@@ -149,6 +149,7 @@ td{
 .alerta-comprobante{background:#fff3cd;color:#664d03;}
 .alerta-devolucion{background:#f8d7da;color:#842029;}
 .alerta-reactivacion{background:#cff4fc;color:#055160;}
+.alerta-actividad{background:#cfe2ff;color:#084298;}
 .acciones-rapidas{
     display:flex;
     gap:6px;
@@ -560,6 +561,37 @@ function cargarPedidos(){
 }
 
 
+function claveRevisionPedido(idPedido){
+    return "rhino_revision_pedido_"+String(idPedido||"").trim().toUpperCase();
+}
+
+function fechaMilisegundos(valor){
+    if(!valor) return 0;
+    const fecha=new Date(valor);
+    const tiempo=fecha.getTime();
+    return Number.isFinite(tiempo)?tiempo:0;
+}
+
+function tieneActividadNueva(pedido){
+    const id=String(pedido.id_pedido||"").trim();
+    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
+    if(!id||!ultima) return false;
+
+    const guardado=Number(localStorage.getItem(claveRevisionPedido(id))||0);
+    if(guardado>0) return ultima>guardado;
+
+    const fechaPedido=fechaMilisegundos(pedido.fecha_pedido);
+    return fechaPedido>0 && ultima>fechaPedido+60000;
+}
+
+function marcarPedidoRevisado(pedido){
+    if(!pedido) return;
+    const id=String(pedido.id_pedido||"").trim();
+    if(!id) return;
+    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
+    localStorage.setItem(claveRevisionPedido(id),String(ultima||Date.now()));
+}
+
 function obtenerAlertaPedido(pedido){
     const estadoPedido=String(pedido.estado_pedido||"").trim().toUpperCase();
     const estadoPago=String(pedido.estado_pago||"").trim().toUpperCase();
@@ -577,6 +609,9 @@ function obtenerAlertaPedido(pedido){
     }
     if(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido){
         return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
+    }
+    if(tieneActividadNueva(pedido)){
+        return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
     }
     return null;
 }
@@ -694,6 +729,9 @@ function verPedido(indice){
     if(!p){
         return;
     }
+
+    marcarPedidoRevisado(p);
+    mostrarPedidos();
 
     document
     .getElementById("tituloPedido")
