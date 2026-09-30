@@ -2185,6 +2185,19 @@
 
                             <div class="form-group">
 
+                                <label>C.I.</label>
+
+                                <input
+                        type="text"
+                        id="ci"
+                        inputmode="numeric"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,''); beneficioPolicial.consultado=false;"
+                        onblur="consultarBeneficioPolicial()"
+                    >
+                            </div>
+
+                            <div class="form-group">
+
                                 <label>Teléfono</label>
                                 <div style="display:grid;grid-template-columns:minmax(175px,1fr) minmax(130px,1fr);gap:8px;">
                                     <select id="paisTelefono" aria-label="País del teléfono">
@@ -2229,20 +2242,7 @@
 
                             <div class="form-group">
 
-                                <label>C.I.</label>
-
-                                <input
-                        type="text"
-                        id="ci"
-                        inputmode="numeric"
-                        oninput="this.value=this.value.replace(/[^0-9]/g,''); beneficioPolicial.consultado=false;"
-                        onblur="consultarBeneficioPolicial()"
-                    >
-                            </div>
-
-                            <div class="form-group">
-
-                                <label>Departamento</label>
+                                <label>Departamento de compra</label>
 
                                 <select id="departamento" onchange="actualizarEntrega()">
 
