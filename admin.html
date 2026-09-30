@@ -31,6 +31,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <a href="index.html" style="display:inline-block;margin-top:15px;color:#aaa;text-decoration:none;">← Volver a la tienda</a>
 </div>
 </div>
+
 <div id="panelAdmin" style="display:none;">
 <header class="admin-header">
 <h1>RHINO TACTICAL ARMOR</h1>
@@ -54,16 +55,26 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <h2>Gestionar pedidos</h2>
 <p>Revisar pedidos, pagos, envíos y entregas</p>
 </a>
+
+<!-- Categorías se administrarán desde una sola pantalla -->
 <a href="gestionar-categorias.html" class="card">
 <div class="card-icon">🏷️</div>
 <h2>Gestionar categorías</h2>
 <p>Agregar, editar, activar y eliminar categorías</p>
+</a>
+
+<!-- Nueva arquitectura preparada para múltiples tiendas/bases -->
+<a href="gestionar-entregas.html" class="card">
+<div class="card-icon">🚚</div>
+<h2>Gestionar entregas</h2>
+<p>Consultar y modificar tarifas de entrega a domicilio</p>
 </a>
 <a href="gestionar-bases.html" class="card">
 <div class="card-icon">📍</div>
 <h2>Bases / Tiendas RHINO</h2>
 <p>Agregar, editar y administrar puntos de despacho y su ubicación</p>
 </a>
+
 <div class="card">
 <div class="card-icon">📊</div>
 <h2>Inventario</h2>
@@ -76,69 +87,15 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 </div>
 </div>
 <a href="index.html" class="back">← Volver a la tienda</a>
-<button type="button" class="back" onclick="cerrarSesionAdmin()" style="border:0;cursor:pointer;margin-left:10px;background:#8b1e1e;">🔒 Cerrar sesión</button>
 </main>
 </div>
+
 <script>
 const URL_SERVIDOR="https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
-
-function mostrarPanelAdmin(){
-    document.getElementById("accesoAdmin").style.display="none";
-    document.getElementById("panelAdmin").style.display="block";
-}
-
-function mostrarAccesoAdmin(){
-    document.getElementById("accesoAdmin").style.display="flex";
-    document.getElementById("panelAdmin").style.display="none";
-}
-
-const TIEMPO_INACTIVIDAD_ADMIN=30*60*1000;
-let temporizadorInactividadAdmin=null;
-
-function cerrarSesionAdmin(){
-    sessionStorage.removeItem("tokenAdmin");
-    sessionStorage.removeItem("ultimaActividadAdmin");
-    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
-    mostrarAccesoAdmin();
-    document.getElementById("claveAdmin").value="";
-    document.getElementById("mensajeAcceso").textContent="";
-}
-
-function comprobarInactividadAdmin(){
-    if(!sessionStorage.getItem("tokenAdmin"))return;
-    const ultimaActividad=Number(sessionStorage.getItem("ultimaActividadAdmin")||0);
-    if(!ultimaActividad||Date.now()-ultimaActividad>=TIEMPO_INACTIVIDAD_ADMIN){
-        cerrarSesionAdmin();
-        return;
-    }
-    const restante=TIEMPO_INACTIVIDAD_ADMIN-(Date.now()-ultimaActividad);
-    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
-    temporizadorInactividadAdmin=setTimeout(comprobarInactividadAdmin,restante);
-}
-
-function registrarActividadAdmin(){
-    if(!sessionStorage.getItem("tokenAdmin"))return;
-    sessionStorage.setItem("ultimaActividadAdmin",String(Date.now()));
-    if(temporizadorInactividadAdmin)clearTimeout(temporizadorInactividadAdmin);
-    temporizadorInactividadAdmin=setTimeout(comprobarInactividadAdmin,TIEMPO_INACTIVIDAD_ADMIN);
-}
-
-["click","keydown","touchstart"].forEach(function(evento){
-    document.addEventListener(evento,registrarActividadAdmin,{passive:true});
-});
-
-if(sessionStorage.getItem("tokenAdmin")){
-    comprobarInactividadAdmin();
-    if(sessionStorage.getItem("tokenAdmin"))mostrarPanelAdmin();
-}else{
-    mostrarAccesoAdmin();
-}
-
 document.getElementById("btnIngresarAdmin").addEventListener("click",ingresarAdmin);
 document.getElementById("claveAdmin").addEventListener("keydown",function(e){
     if(e.key==="Enter") ingresarAdmin();
 });
-
 function ingresarAdmin(){
     const clave=document.getElementById("claveAdmin").value;
     const mensaje=document.getElementById("mensajeAcceso");
@@ -156,11 +113,8 @@ function ingresarAdmin(){
     .then(function(resultado){
         if(resultado.autorizado){
             sessionStorage.setItem("tokenAdmin",resultado.token);
-            sessionStorage.setItem("ultimaActividadAdmin",String(Date.now()));
-            registrarActividadAdmin();
-            mostrarPanelAdmin();
-            document.getElementById("claveAdmin").value="";
-            mensaje.textContent="";
+            document.getElementById("accesoAdmin").style.display="none";
+            document.getElementById("panelAdmin").style.display="block";
         }else{
             mensaje.style.color="#ff6b6b";
             mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";
