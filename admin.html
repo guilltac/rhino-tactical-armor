@@ -37,6 +37,10 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <p style="color:#aaa;">🔐 ACCESO ADMINISTRATIVO</p>
 <div id="formularioAccesoRhino">
 <input type="password" id="claveAdmin" placeholder="Contraseña" autocomplete="current-password" style="width:100%;padding:14px;margin:20px 0 12px;border-radius:6px;border:1px solid #555;background:#111;color:white;font-size:16px;">
+<label for="mostrarClaveAdminRhino" style="display:flex;align-items:center;gap:8px;margin:0 0 16px;text-align:left;color:#ccc;font-size:14px;cursor:pointer;">
+<input type="checkbox" id="mostrarClaveAdminRhino" aria-controls="claveAdmin" onchange="alternarVisibilidadClaveAdminRhino(this.checked)" style="width:18px;height:18px;margin:0;accent-color:#5bb42d;">
+<span>Mostrar contraseña</span>
+</label>
 <button id="btnIngresarAdmin" style="width:100%;padding:14px;border:0;border-radius:6px;background:#5bb42d;font-weight:bold;cursor:pointer;font-size:16px;">INGRESAR</button>
 </div>
 <div id="mensajeAcceso" role="status" style="margin-top:15px;color:#ff6b6b;min-height:20px;"></div>
@@ -141,7 +145,14 @@ function pintarIndicadorRhino(){
     badge.style.display=cantidad>0?"block":"none";
     texto.textContent=cantidad>0?(cantidad===1?"1 pedido requiere atención":cantidad+" pedidos requieren atención"):"Revisar pedidos, pagos, envíos y entregas";
 }
+function alternarVisibilidadClaveAdminRhino(mostrar){
+    const campo=document.getElementById("claveAdmin");
+    const control=document.getElementById("mostrarClaveAdminRhino");
+    campo.type=mostrar?"text":"password";
+    control.checked=!!mostrar;
+}
 function mostrarAccesoRhino(mensaje){
+    alternarVisibilidadClaveAdminRhino(false);
     document.getElementById("panelAdmin").style.display="none";
     document.getElementById("accesoAdmin").style.display="flex";
     document.getElementById("formularioAccesoRhino").style.display="block";
@@ -209,6 +220,7 @@ async function ingresarAdmin(){
         if(resultado.autorizado&&resultado.token){
             sessionStorage.setItem("tokenAdmin",resultado.token);
             document.getElementById("claveAdmin").value="";
+            alternarVisibilidadClaveAdminRhino(false);
             document.getElementById("formularioAccesoRhino").style.display="none";
             await actualizarIndicadorPedidos();
         }else{mensaje.style.color="#ff6b6b";mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";}
