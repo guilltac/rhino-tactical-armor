@@ -4239,7 +4239,7 @@ header .brand-mark{position:relative}
     acceso.addEventListener("click",function(evento){
         const ahora=Date.now();
         if(evento.detail===0||(ultimoToque!==null&&ahora-ultimoToque<=600)){
-            window.location.assign("admin.html");
+            window.open("admin.html","_blank","popup=yes,width=1280,height=850,resizable=yes,scrollbars=yes,noopener,noreferrer");
             ultimoToque=null;
         }else{ultimoToque=ahora;}
     });
