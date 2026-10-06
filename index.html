@@ -1761,127 +1761,11 @@ header .brand-mark{position:relative}
 
                     <h2>Categorías</h2>
 
-                    <div class="categories">
-
-                    <div
-                    class="category active"
-                    onclick="filtrarCategoria('todos',this)">
-
-                    <div class="category-icon">
-                    ▦
-                    </div>
-
-                    <h3>Todos</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('novedades',this)">
-
-                    <div class="category-icon">
-                    ✦
-                    </div>
-
-                    <h3>Novedades</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('botas',this)">
-
-                    <div class="category-icon">
-                    🥾
-                    </div>
-
-                    <h3>Botas</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('tactico',this)">
-
-                    <div class="category-icon">
-                    🛡
-                    </div>
-
-                    <h3>Equipo Táctico</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('uniformes',this)">
-
-                    <div class="category-icon">
-                    👕
-                    </div>
-
-                    <h3>Uniformes</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('aph',this)">
-
-                    <div class="category-icon">
-                    ✚
-                    </div>
-
-                    <h3>APH</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('promo',this)">
-
-                    <div class="category-icon">
-                    %
-                    </div>
-
-                    <h3>Promociones</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('reacondicionados',this)">
-
-                    <div class="category-icon">
-                    ♻
-                    </div>
-
-                    <h3>Uniformes Reacondicionados</h3>
-
-                    </div>
-
-                    <div
-                    class="category"
-                    onclick="filtrarCategoria('relevo',this)">
-
-                    <div class="category-icon">
-                    ↻
-                    </div>
-
-                    <h3>Zona de Relevo</h3>
-
-                    </div>
-            <div
-                    class="category"
-                    onclick="filtrarCategoria('varios',this)">
-
-                    <div class="category-icon">
-                    ▦
-                    </div>
-
-                    <h3>Varios</h3>
-
-                    </div>
-
+                    <div class="categories" id="categoriasTiendaRhino" aria-label="Categorías de productos">
+                        <div class="category active" role="button" tabindex="0" onclick="filtrarCategoria('todos',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filtrarCategoria('todos',this);}">
+                            <div class="category-icon">▦</div><h3>Todos</h3>
+                        </div>
+                        <p id="estadoCategoriasRhino" role="status">Cargando categorías…</p>
                     </div>
 
                     </aside>
@@ -2495,9 +2379,88 @@ header .brand-mark{position:relative}
                        CARGAR PRODUCTOS
                     ========================= */
 
+
+                    let categoriasTiendaRhino=[];
+                    let categoriaSeleccionadaRhino="todos";
+                    let consultandoCategoriasRhino=false;
+                    let firmaCategoriasRhino="";
+                    function normalizarClaveCategoriaRhino(valor){
+                        return String(valor||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim().replace(/\s+/g," ");
+                    }
+                    function crearBotonCategoriaRhino(categoria){
+                        const boton=document.createElement("div");
+                        boton.className="category";
+                        boton.dataset.categoriaId=categoria.id;
+                        boton.setAttribute("role","button");
+                        boton.setAttribute("tabindex","0");
+                        const activo=categoria.id===categoriaSeleccionadaRhino;
+                        boton.classList.toggle("active",activo);
+                        boton.setAttribute("aria-pressed",String(activo));
+                        const icono=document.createElement("div");icono.className="category-icon";icono.textContent=categoria.icono||"▦";
+                        const nombre=document.createElement("h3");nombre.textContent=categoria.nombre;
+                        boton.appendChild(icono);boton.appendChild(nombre);
+                        boton.addEventListener("click",function(){filtrarCategoria(categoria.id,boton);});
+                        boton.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();filtrarCategoria(categoria.id,boton);}});
+                        return boton;
+                    }
+                    function dibujarCategoriasTiendaRhino(){
+                        const contenedor=document.getElementById("categoriasTiendaRhino");
+                        if(categoriaSeleccionadaRhino!=="todos"&&!categoriasTiendaRhino.some(function(c){return c.id===categoriaSeleccionadaRhino;})) categoriaSeleccionadaRhino="todos";
+                        contenedor.innerHTML="";
+                        contenedor.appendChild(crearBotonCategoriaRhino({id:"todos",nombre:"Todos",icono:"▦"}));
+                        categoriasTiendaRhino.forEach(function(c){contenedor.appendChild(crearBotonCategoriaRhino(c));});
+                        aplicarFiltroCategoriaRhino();
+                    }
+                    async function cargarCategoriasTiendaRhino(){
+                        if(consultandoCategoriasRhino) return;
+                        consultandoCategoriasRhino=true;
+                        const control=new AbortController();
+                        const espera=setTimeout(function(){control.abort();},15000);
+                        try{
+                            const respuesta=await fetch(URL_SERVIDOR+"?accion=listarCategoriasPublicas&t="+Date.now(),{signal:control.signal});
+                            if(!respuesta.ok) throw new Error("Error al consultar categorías");
+                            const r=await respuesta.json();
+                            if(!r.ok||!Array.isArray(r.categorias)) throw new Error("Respuesta de categorías no válida");
+                            const categorias=r.categorias.filter(function(c){return c&&c.id&&c.nombre;}).sort(function(a,b){return (Number(a.orden)||0)-(Number(b.orden)||0);});
+                            const firma=JSON.stringify(categorias);
+                            if(firma!==firmaCategoriasRhino){categoriasTiendaRhino=categorias;firmaCategoriasRhino=firma;dibujarCategoriasTiendaRhino();}
+                        }catch(error){
+                            console.error("No se pudieron cargar las categorías:",error);
+                            if(!firmaCategoriasRhino){
+                                const contenedor=document.getElementById("categoriasTiendaRhino");
+                                const anterior=document.getElementById("estadoCategoriasRhino");
+                                if(anterior) anterior.remove();
+                                const aviso=document.createElement("p");aviso.id="estadoCategoriasRhino";aviso.textContent="No se pudieron cargar las categorías. ";
+                                const reintentar=document.createElement("button");reintentar.type="button";reintentar.textContent="Reintentar";reintentar.addEventListener("click",cargarCategoriasTiendaRhino);
+                                aviso.appendChild(reintentar);contenedor.appendChild(aviso);
+                            }
+                        }finally{clearTimeout(espera);consultandoCategoriasRhino=false;}
+                    }
+                    function clavesProductoCategoriaRhino(valor){
+                        // Mantiene nombres completos y admite los tokens antiguos separados por espacios.
+                        const completas=categoriasTiendaRhino.flatMap(function(c){return (c.claves||[]).concat([c.nombre]).map(normalizarClaveCategoriaRhino);});
+                        return String(valor||"").split(/[,;|]/).flatMap(function(parte){
+                            const clave=normalizarClaveCategoriaRhino(parte);
+                            if(completas.includes(clave)) return [clave];
+                            return clave.split(/\s+/).filter(Boolean);
+                        });
+                    }
+                    function aplicarFiltroCategoriaRhino(){
+                        const categoria=categoriasTiendaRhino.find(function(c){return c.id===categoriaSeleccionadaRhino;});
+                        const claves=categoria?(categoria.claves||[]).concat([categoria.nombre]).map(normalizarClaveCategoriaRhino):[];
+                        let visibles=0;
+                        document.querySelectorAll(".product").forEach(function(tarjeta){
+                            const coincide=categoriaSeleccionadaRhino==="todos"||clavesProductoCategoriaRhino(tarjeta.dataset.category).some(function(clave){return claves.includes(clave);});
+                            tarjeta.classList.toggle("hidden",!coincide);if(coincide) visibles++;
+                        });
+                        document.getElementById("contador").textContent=visibles+" producto(s)";
+                    }
+                    window.addEventListener("focus",cargarCategoriasTiendaRhino);
+                    document.addEventListener("visibilitychange",function(){if(!document.hidden) cargarCategoriasTiendaRhino();});
+
                     function cargarProductos(){
 
-                        fetch(
+                        return fetch(
                             URL_SERVIDOR +
                             "?t=" +
                             Date.now()
@@ -2548,7 +2511,7 @@ header .brand-mark{position:relative}
 
                         productos = datos || [];
 
-                        mostrarProductos(productos);
+                        buscarProductos();
                     }
 
                     /* =========================
@@ -2720,6 +2683,7 @@ header .brand-mark{position:relative}
                             contenedor.appendChild(tarjeta);
 
                         });
+                        aplicarFiltroCategoriaRhino();
                     }
 
                     /* =========================
@@ -2727,55 +2691,12 @@ header .brand-mark{position:relative}
                     ========================= */
 
                     function filtrarCategoria(categoria, boton){
-
-                        document
-                            .querySelectorAll(".category")
-                            .forEach(elemento => {
-
-                                elemento.classList.remove("active");
-
-                            });
-
-                        if(boton){
-
-                            boton.classList.add("active");
-
-                        }
-
-                        const tarjetas =
-                            document.querySelectorAll(".product");
-
-                        let visibles = 0;
-
-                        tarjetas.forEach(tarjeta => {
-
-                            const categorias =
-                                String(
-                                    tarjeta.dataset.category || ""
-                                )
-                                .toLowerCase()
-                                .split(/[,\s]+/)
-                                .filter(Boolean);
-
-                            if(
-                                categoria === "todos" ||
-                                categorias.includes(categoria)
-                            ){
-
-                                tarjeta.classList.remove("hidden");
-
-                                visibles++;
-
-                            }else{
-
-                                tarjeta.classList.add("hidden");
-
-                            }
-
+                        categoriaSeleccionadaRhino=categoria;
+                        document.querySelectorAll("#categoriasTiendaRhino .category").forEach(function(elemento){
+                            const activo=elemento.dataset.categoriaId===categoria;
+                            elemento.classList.toggle("active",activo);elemento.setAttribute("aria-pressed",String(activo));
                         });
-
-                        document.getElementById("contador").textContent =
-                            visibles + " producto(s)";
+                        aplicarFiltroCategoriaRhino();
                     }
 
                     /* =========================
@@ -4200,6 +4121,7 @@ header .brand-mark{position:relative}
                        INICIAR
                     ========================= */
 
+                    cargarCategoriasTiendaRhino();
                     cargarProductos();
 
                     /* Actualización automática del catálogo y stock */
@@ -4208,7 +4130,7 @@ header .brand-mark{position:relative}
                         if(document.hidden||actualizandoStockAutomatico) return;
                         actualizandoStockAutomatico=true;
                         try{
-                            await cargarProductos();
+                            await Promise.all([cargarProductos(),cargarCategoriasTiendaRhino()]);
                         }catch(error){
                             console.warn("No se pudo actualizar el stock automáticamente:",error);
                         }finally{
