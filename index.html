@@ -7,7 +7,6 @@
 
                     <meta name="viewport"
                     content="width=device-width, initial-scale=1.0">
-                    e
                     <title>RHINO TACTICAL ARMOR | Equipamiento Táctico Bolivia</title>
                     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -1663,7 +1662,14 @@
                     }
         </style>
 
-                    </head>
+                    
+<style id="accesoDiscretoRhinoEstilos">
+header .logo-area{padding-left:16px}
+header .brand-mark{position:relative}
+#accesoDiscretoRhino{position:absolute;left:-24px;top:0;width:24px;height:100%;padding:0;margin:0;border:0;border-radius:0;background:transparent;color:transparent;box-shadow:none;cursor:default;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#accesoDiscretoRhino:focus-visible{outline:1px solid #66884d;outline-offset:1px}
+</style>
+</head>
 
                     <body>
 
@@ -1683,6 +1689,7 @@
                             <div class="logo-area">
 
                                 <div class="brand-mark">
+<button type="button" id="accesoDiscretoRhino" aria-label="Acceso administrativo"></button>
                                     <img
                                         src="logo-rhino.png"
                                         alt="RHINO TACTICAL ARMOR"
@@ -4135,6 +4142,12 @@
                                 (guia?'<div><b>N.º de guía:</b> '+escaparHTML(guia)+'</div>':'');
                             const pedidoCancelado=String(estadoPedido).toUpperCase().includes("CANCEL");
                             const pagoConfirmado=["PAGO CONFIRMADO","PAGADO","CONFIRMADO"].includes(String(estadoPago).toUpperCase().trim());
+                            const motivoNoConfirmado=String(p.motivo_no_confirmado||"").trim();
+                            if(motivoNoConfirmado&&String(estadoPago).trim().toUpperCase()==="PENDIENTE"){
+                                html+='<div style="margin-top:12px;padding:12px;border:1px solid #d7a044;border-radius:7px;background:#2a2418;">'+
+                                    '<b>⚠️ PAGO NO CONFIRMADO</b><br><span style="white-space:pre-wrap;">'+escaparHTML(motivoNoConfirmado)+'</span><br>'+ 
+                                    'Revisa los datos y comunícate con RHINO para aclararlo. Puedes cargar el comprobante correcto desde esta pantalla.</div>';
+                            }
                             const estadoDevolucion=String(p.estado_devolucion||"").toUpperCase();
                             const solicitudReactivacion=String(p.solicitud_reactivacion||"").toUpperCase();
 
@@ -4218,6 +4231,20 @@
                         </button>
                     </div>
 
-                    </body>
+                    
+<script>
+(function(){
+    const acceso=document.getElementById("accesoDiscretoRhino");
+    let ultimoToque=null;
+    acceso.addEventListener("click",function(evento){
+        const ahora=Date.now();
+        if(evento.detail===0||(ultimoToque!==null&&ahora-ultimoToque<=600)){
+            window.location.assign("admin.html");
+            ultimoToque=null;
+        }else{ultimoToque=ahora;}
+    });
+})();
+</script>
+</body>
 
                     </html>
