@@ -399,6 +399,100 @@ th:nth-child(7),td:nth-child(7){width:30%;}
 if (!sessionStorage.getItem("tokenAdmin")) {
     window.location.replace("admin.html");
 }
+
+// Guarda el JPEG y permite abrirlo/compartirlo desde el celular.
+function ofrecerJpegRhino(canvas,nombre){
+    return new Promise(function(resolve,reject){
+        canvas.toBlob(function(blob){
+            if(!blob){reject(new Error("No se pudo generar la imagen JPEG."));return;}
+            const url=URL.createObjectURL(blob);
+            const fondo=document.createElement("div");
+            fondo.style.cssText="position:fixed;inset:0;z-index:10000;background:#000b;display:flex;align-items:center;justify-content:center;padding:15px";
+            const caja=document.createElement("div");
+            caja.style.cssText="background:white;padding:20px;border-radius:12px;max-width:420px;width:100%;max-height:90vh;overflow:auto;text-align:center;color:#222";
+            const titulo=document.createElement("h3");titulo.textContent=nombre;
+            const vista=document.createElement("img");vista.src=url;vista.alt="Documento listo para imprimir";
+            vista.style.cssText="max-width:100%;max-height:45vh;object-fit:contain;border:1px solid #ddd";
+            const texto=document.createElement("p");texto.textContent="Descarga el JPEG e impórtalo en la aplicación de la impresora. Selecciona papel de 58 mm y ajusta el ancho sin deformar la imagen.";
+            const enlace=document.createElement("a");enlace.href=url;enlace.download=nombre;enlace.textContent="⬇ Descargar JPEG";
+            enlace.style.cssText="display:block;background:#253e58;color:white;padding:12px;margin:10px 0;border-radius:6px;text-decoration:none";
+            const compartir=document.createElement("button");compartir.textContent="Compartir imagen";
+            const fichero=typeof File!=="undefined"?new File([blob],nombre,{type:"image/jpeg"}):null;
+            if(fichero&&navigator.canShare&&navigator.canShare({files:[fichero]})){
+                compartir.onclick=async function(){try{await navigator.share({files:[fichero],title:nombre});}catch(e){if(e.name!=="AbortError")alert("No se pudo compartir. Utiliza Descargar JPEG.");}};
+            }else{compartir.style.display="none";}
+            const cerrar=document.createElement("button");cerrar.textContent="Cerrar";cerrar.style.margin="10px";
+            function salir(){fondo.remove();URL.revokeObjectURL(url);document.removeEventListener("keydown",tecla);}
+            function tecla(e){if(e.key==="Escape")salir();}
+            cerrar.onclick=salir;fondo.onclick=function(e){if(e.target===fondo)salir();};
+            document.addEventListener("keydown",tecla);
+            caja.append(titulo,vista,texto,enlace,compartir,cerrar);fondo.append(caja);document.body.append(fondo);
+            resolve();
+        },"image/jpeg",1);
+    });
+}
+function blancoNegroRhino(canvas){
+    const ctx=canvas.getContext("2d"),datos=ctx.getImageData(0,0,canvas.width,canvas.height);
+    for(let i=0;i<datos.data.length;i+=4){
+        const valor=(datos.data[i]*0.299+datos.data[i+1]*0.587+datos.data[i+2]*0.114)<180?0:255;
+        datos.data[i]=datos.data[i+1]=datos.data[i+2]=valor;datos.data[i+3]=255;
+    }
+    ctx.putImageData(datos,0,0);
+}
+
+let cargaPdfRhino;
+function cargarPdfRhino(){
+    if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+    if(!cargaPdfRhino){
+        cargaPdfRhino=new Promise(function(resolve,reject){
+            const script=document.createElement("script");
+            script.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+            script.onload=function(){if(window.pdfjsLib)resolve(window.pdfjsLib);else reject(new Error("No se pudo cargar el conversor PDF."));};
+            script.onerror=function(){reject(new Error("No se pudo cargar el conversor PDF. Revisa la conexión a Internet."));};
+            document.head.append(script);
+        }).catch(function(e){cargaPdfRhino=null;throw e;});
+    }
+    return cargaPdfRhino;
+}
+async function descargarNotaJpegRhino(indice,boton){
+    const pedido=pedidosCargados[indice];if(!pedido)return;
+    const anterior=boton?boton.textContent:"";
+    if(boton){boton.disabled=true;boton.textContent="Preparando JPEG…";}
+    let documento;
+    try{
+        const datos=new URLSearchParams({accion:"obtenerNotaPdfAdmin",tokenAdmin:sessionStorage.getItem("tokenAdmin")||"",id_pedido:String(pedido.id_pedido)});
+        const [respuesta,pdfjs]=await Promise.all([fetch(URL_SERVIDOR,{method:"POST",body:datos}).then(r=>r.json()),cargarPdfRhino()]);
+        if(!respuesta.ok)throw new Error(respuesta.mensaje||"No se pudo obtener la nota PDF.");
+        pdfjs.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        const bytes=Uint8Array.from(atob(respuesta.pdf_base64),c=>c.charCodeAt(0));
+        documento=await pdfjs.getDocument({data:bytes,isEvalSupported:false}).promise;
+        const paginas=[];let altoTotal=0;const ancho=684;
+        for(let n=1;n<=documento.numPages;n++){
+            const pagina=await documento.getPage(n);
+            const natural=pagina.getViewport({scale:1});
+            const viewport=pagina.getViewport({scale:ancho/natural.width});
+            const canvas=document.createElement("canvas");canvas.width=ancho;canvas.height=Math.ceil(viewport.height);
+            if(canvas.height>16000)throw new Error("La nota es demasiado larga. Utiliza el PDF.");
+            const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,ancho,canvas.height);
+            await pagina.render({canvasContext:ctx,viewport:viewport,background:"white"}).promise;
+            // Retira solo el espacio blanco inferior; conserva todo el contenido.
+            const pixeles=ctx.getImageData(0,0,ancho,canvas.height).data;
+            let ultimo=canvas.height-1;
+            filas:for(;ultimo>=0;ultimo--){for(let x=0;x<ancho;x++){const i=(ultimo*ancho+x)*4;if(pixeles[i]<235||pixeles[i+1]<235||pixeles[i+2]<235)break filas;}}
+            const alto=Math.min(canvas.height,Math.max(1,ultimo+20));
+            altoTotal+=alto;
+            if(altoTotal>16000)throw new Error("La nota es demasiado larga para una sola imagen. Utiliza el PDF.");
+            paginas.push({canvas:canvas,alto:alto});pagina.cleanup();
+        }
+        const final=document.createElement("canvas");final.width=ancho;final.height=altoTotal;
+        const ctx=final.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,ancho,altoTotal);
+        let y=0;paginas.forEach(p=>{ctx.drawImage(p.canvas,0,0,ancho,p.alto,0,y,ancho,p.alto);y+=p.alto;});
+        blancoNegroRhino(final);
+        await ofrecerJpegRhino(final,"NOTA_"+String(respuesta.numero_nota||"").replace(/[^A-Za-z0-9_-]/g,"")+"_"+String(respuesta.id_pedido).replace(/[^A-Za-z0-9_-]/g,"")+"_58mm.jpg");
+    }catch(error){alert(error.message||"No se pudo preparar la nota JPEG.");}
+    finally{if(documento)await documento.destroy();if(boton){boton.disabled=false;boton.textContent=anterior;}}
+}
+
 </script>
 
 <header>
@@ -1028,6 +1122,7 @@ function mostrarPedidos(){
             acciones+=
                 "<button type='button' class='btn-nota' onclick='verNotaVenta("+url+")'>📄 Ver / Imprimir</button>"+
                 "<button type='button' class='btn-descargar' onclick='descargarNotaVenta("+url+")'>⬇️ Descargar</button>"+
+                "<button type='button' class='btn-descargar' onclick='descargarNotaJpegRhino("+indice+",this)'>⬇ Nota JPEG 58 mm</button>"+
                 "<button type='button' class='btn-whatsapp' onclick='enviarNotaWhatsApp("+indice+")'>📱 Enviar nota</button>";
         }
 
