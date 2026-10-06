@@ -16,12 +16,27 @@ button{padding:13px 20px;background:#5bb42d;border:0;border-radius:6px;font-weig
 #mensaje,#mensajeHorarios{min-height:22px;margin-top:15px;font-weight:bold}.interruptor{display:flex;align-items:center;gap:12px;padding:14px;background:#f6f6f6;border-radius:8px;margin:12px 0 20px}.interruptor input{width:22px;height:22px}.dia{border:1px solid #ddd;border-radius:8px;padding:15px;margin:12px 0}.dia-cabecera{display:flex;align-items:center;gap:10px;font-weight:bold}.dia-cabecera input{width:20px;height:20px}.franjas{margin-top:10px}.franja{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;margin-top:9px}.franja input,.bloqueo input{padding:10px;border:1px solid #aaa;border-radius:6px;font-size:15px;width:100%}.secundario{background:#333;color:white;margin-top:10px;padding:9px 13px}.eliminar{background:#b52b2b;color:white;margin:0;padding:10px 12px}.fecha-entrega{border:1px solid #ddd;border-radius:8px;padding:15px;margin:12px 0}.fecha-cabecera{display:grid;grid-template-columns:180px 1fr auto;gap:10px;align-items:center}.fecha-cabecera input{padding:10px;border:1px solid #aaa;border-radius:6px;font-size:15px;width:100%}.nombre-fecha{font-weight:bold}.estado-servicio{font-weight:bold}
 @media(max-width:600px){.fila{grid-template-columns:1fr 125px}.panel{padding:15px}.franja{grid-template-columns:1fr 1fr}.franja .eliminar{grid-column:1/-1}.fecha-cabecera{grid-template-columns:1fr}.fecha-cabecera .eliminar{width:100%}}
 </style>
+
+<style id="rhinoNavegacionEstilos">
+.rhino-navegacion{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;background:#151815;border-bottom:1px solid #537a39;position:sticky;top:0;z-index:90}
+.rhino-navegacion a,.rhino-navegacion button{display:inline-flex;align-items:center;justify-content:center;margin:0;padding:10px 14px;border:1px solid #77965d;border-radius:6px;color:#fff;background:#263521;text-decoration:none;font:600 14px Arial,sans-serif;cursor:pointer}
+.rhino-navegacion button{background:#512b2b;border-color:#b86a6a}
+.rhino-navegacion a:focus-visible,.rhino-navegacion button:focus-visible{outline:3px solid #ffd566;outline-offset:2px}
+@media(max-width:520px){.rhino-navegacion{padding:10px;gap:6px}.rhino-navegacion a,.rhino-navegacion button{flex:1;padding:10px 7px;font-size:12px}}
+@media print{.rhino-navegacion{display:none}}
+</style>
 </head>
 <body>
+<nav class="rhino-navegacion" aria-label="Navegación administrativa">
+<a href="admin.html">← Volver al panel</a>
+<a href="index.html">🏪 Ir a la tienda</a>
+<button type="button" onclick="cerrarSesionRhino(this)">🚪 Cerrar sesión</button>
+</nav>
+
 <script>if(!sessionStorage.getItem('tokenAdmin'))window.location.replace('admin.html');</script>
 <header><h1>RHINO TACTICAL ARMOR</h1><p>🚚 Gestionar entregas</p></header>
 <main>
-<a class="volver" href="admin.html">← Volver al panel</a>
+
 <section class="panel">
 <h2>Tarifas de entrega a domicilio</h2>
 <p class="nota">Punto de partida provisional: Cruce de Villas, cerca del Teleférico Café, La Paz. Las tarifas se expresan en bolivianos (Bs). Los precios guardados aquí todavía no se aplican automáticamente a los pedidos.</p>
@@ -59,6 +74,29 @@ function dibujarAgenda(datos){const agenda=document.getElementById('agenda');age
 function cargarHorarios(){botonHorarios.disabled=true;mostrarMensajeHorarios('',false);solicitar('consultarHorariosEntregaAdmin').then(r=>{document.getElementById('entregasActivas').checked=!!r.activo;dibujarAgenda(Array.isArray(r.agenda)?r.agenda:[]);botonHorarios.disabled=false}).catch(e=>{document.getElementById('agenda').textContent='No se pudo cargar la agenda.';mostrarMensajeHorarios(e.message,true)})}
 function guardarHorarios(){const agenda=[];const fechas=new Set();for(const caja of document.querySelectorAll('.fecha-entrega')){const fecha=caja.querySelector('.fecha-programada').value;if(!fecha){mostrarMensajeHorarios('Selecciona la fecha de cada entrega programada.',true);return}if(fechas.has(fecha)){mostrarMensajeHorarios('La fecha '+fecha+' está repetida.',true);return}fechas.add(fecha);const franjas=[];for(const fila of caja.querySelectorAll('.franja')){const campos=fila.querySelectorAll('input[type=time]'),inicio=campos[0].value,fin=campos[1].value;if(!inicio||!fin){mostrarMensajeHorarios('Completa todos los horarios de '+nombreDia(fecha)+'.',true);return}franjas.push({inicio,fin})}if(!franjas.length){mostrarMensajeHorarios('Añade al menos un horario a '+nombreDia(fecha)+'.',true);return}agenda.push({fecha,franjas})}agenda.sort((a,b)=>a.fecha.localeCompare(b.fecha));const configuracion={activo:document.getElementById('entregasActivas').checked,agenda};botonHorarios.disabled=true;mostrarMensajeHorarios('Guardando agenda...',false);solicitar('guardarHorariosEntregaAdmin',{configuracion:JSON.stringify(configuracion)}).then(()=>solicitar('consultarHorariosEntregaAdmin')).then(r=>{document.getElementById('entregasActivas').checked=!!r.activo;dibujarAgenda(r.agenda||[]);mostrarMensajeHorarios('✓ Agenda de entregas guardada correctamente en Google Sheets.',false)}).catch(e=>mostrarMensajeHorarios(e.message,true)).finally(()=>{botonHorarios.disabled=false})}
 cargarTarifas();cargarHorarios();
+</script>
+
+<script>
+async function cerrarSesionRhino(boton){
+    const token=sessionStorage.getItem("tokenAdmin");
+    if(boton) boton.disabled=true;
+    try{
+        if(token){
+            const control=new AbortController();
+            const espera=setTimeout(function(){control.abort();},12000);
+            try{
+                const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"cerrarSesionAdmin",tokenAdmin:token}),signal:control.signal});
+                const resultado=await respuesta.json();
+                if(!respuesta.ok||!resultado.ok) throw new Error("No se pudo cerrar la sesión en el servidor.");
+            }finally{clearTimeout(espera);}
+        }
+    }catch(error){
+        alert("Se cerrará la sesión en este navegador. No se pudo confirmar el cierre en el servidor; allí vencerá al finalizar su plazo.");
+    }finally{
+        sessionStorage.removeItem("tokenAdmin");
+        window.location.replace("index.html");
+    }
+}
 </script>
 </body>
 </html>
