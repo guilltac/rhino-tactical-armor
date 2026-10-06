@@ -148,9 +148,19 @@ function mostrarAccesoRhino(mensaje){
     document.getElementById("mensajeAcceso").textContent=mensaje||"";
     document.getElementById("reintentarSesionRhino").style.display="none";
 }
+function abrirPanelConSesionRhino(){
+    document.getElementById("accesoAdmin").style.display="none";
+    document.getElementById("panelAdmin").style.display="block";
+    document.getElementById("reintentarSesionRhino").style.display="none";
+    if(pedidosPanelRhino.length===0){
+        document.getElementById("badgePedidos").style.display="none";
+        document.getElementById("textoPedidos").textContent="Actualizando novedades…";
+    }
+}
 async function actualizarIndicadorPedidos(){
     const token=sessionStorage.getItem("tokenAdmin")||"";
     if(!token){mostrarAccesoRhino();return;}
+    abrirPanelConSesionRhino();
     if(consultandoPanelRhino) return;
     consultandoPanelRhino=true;
     const control=new AbortController();
@@ -173,9 +183,16 @@ async function actualizarIndicadorPedidos(){
         pintarIndicadorRhino();
     }catch(error){
         if(sessionStorage.getItem("tokenAdmin")!==token) return;
-        document.getElementById("mensajeAcceso").textContent="No se pudo comprobar la sesión. Reintenta la conexión.";
-        document.getElementById("reintentarSesionRhino").style.display="inline-block";
-        document.getElementById("estadoPanelRhino").textContent="No se pudieron actualizar las novedades. Se reintentará al volver a esta pantalla.";
+        const aviso=document.getElementById("estadoPanelRhino");
+        aviso.textContent="No se pudieron actualizar las novedades. ";
+        const reintentar=document.createElement("button");
+        reintentar.type="button";
+        reintentar.textContent="Reintentar";
+        reintentar.addEventListener("click",actualizarIndicadorPedidos);
+        aviso.appendChild(reintentar);
+        if(pedidosPanelRhino.length===0){
+            document.getElementById("textoPedidos").textContent="Novedades pendientes de actualizar";
+        }
     }finally{clearTimeout(espera);consultandoPanelRhino=false;}
 }
 async function ingresarAdmin(){
@@ -203,8 +220,7 @@ window.addEventListener("pageshow",actualizarIndicadorPedidos);
 window.addEventListener("focus",actualizarIndicadorPedidos);
 document.addEventListener("visibilitychange",function(){if(!document.hidden) actualizarIndicadorPedidos();});
 if(sessionStorage.getItem("tokenAdmin")){
-    document.getElementById("formularioAccesoRhino").style.display="none";
-    document.getElementById("mensajeAcceso").textContent="Comprobando sesión...";
+    abrirPanelConSesionRhino();
     actualizarIndicadorPedidos();
 }
 </script>
