@@ -42,13 +42,28 @@ small{color:#aaa}
 .actions{grid-column:1/-1}
 }
 </style>
+
+<style id="rhinoNavegacionEstilos">
+.rhino-navegacion{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;background:#151815;border-bottom:1px solid #537a39;position:sticky;top:0;z-index:90}
+.rhino-navegacion a,.rhino-navegacion button{display:inline-flex;align-items:center;justify-content:center;margin:0;padding:10px 14px;border:1px solid #77965d;border-radius:6px;color:#fff;background:#263521;text-decoration:none;font:600 14px Arial,sans-serif;cursor:pointer}
+.rhino-navegacion button{background:#512b2b;border-color:#b86a6a}
+.rhino-navegacion a:focus-visible,.rhino-navegacion button:focus-visible{outline:3px solid #ffd566;outline-offset:2px}
+@media(max-width:520px){.rhino-navegacion{padding:10px;gap:6px}.rhino-navegacion a,.rhino-navegacion button{flex:1;padding:10px 7px;font-size:12px}}
+@media print{.rhino-navegacion{display:none}}
+</style>
 </head>
 <body>
+<nav class="rhino-navegacion" aria-label="Navegación administrativa">
+<a href="admin.html">← Volver al panel</a>
+<a href="index.html">🏪 Ir a la tienda</a>
+<button type="button" onclick="cerrarSesionRhino(this)">🚪 Cerrar sesión</button>
+</nav>
+
 <header><h1>RHINO TACTICAL ARMOR</h1><p>Gestión de categorías</p></header>
 <main>
 <div id="mensaje" class="notice"></div>
 <div class="toolbar">
-<button class="secondary" onclick="location.href='admin.html'">← Volver al panel</button>
+
 <button class="primary" onclick="abrirNueva()">＋ Agregar categoría</button>
 </div>
 <div id="lista"><div class="card">Cargando categorías...</div></div>
@@ -246,6 +261,29 @@ function escAttr(v){
 }
 document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")cerrarModal();});
 cargar();
+</script>
+
+<script>
+async function cerrarSesionRhino(boton){
+    const token=sessionStorage.getItem("tokenAdmin");
+    if(boton) boton.disabled=true;
+    try{
+        if(token){
+            const control=new AbortController();
+            const espera=setTimeout(function(){control.abort();},12000);
+            try{
+                const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"cerrarSesionAdmin",tokenAdmin:token}),signal:control.signal});
+                const resultado=await respuesta.json();
+                if(!respuesta.ok||!resultado.ok) throw new Error("No se pudo cerrar la sesión en el servidor.");
+            }finally{clearTimeout(espera);}
+        }
+    }catch(error){
+        alert("Se cerrará la sesión en este navegador. No se pudo confirmar el cierre en el servidor; allí vencerá al finalizar su plazo.");
+    }finally{
+        sessionStorage.removeItem("tokenAdmin");
+        window.location.replace("index.html");
+    }
+}
 </script>
 </body>
 </html>
