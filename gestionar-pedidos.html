@@ -366,9 +366,24 @@ th:nth-child(7),td:nth-child(7){width:30%;}
 }
 
 </style>
+
+<style id="rhinoNavegacionEstilos">
+.rhino-navegacion{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;background:#151815;border-bottom:1px solid #537a39;position:sticky;top:0;z-index:90}
+.rhino-navegacion a,.rhino-navegacion button{display:inline-flex;align-items:center;justify-content:center;margin:0;padding:10px 14px;border:1px solid #77965d;border-radius:6px;color:#fff;background:#263521;text-decoration:none;font:600 14px Arial,sans-serif;cursor:pointer}
+.rhino-navegacion button{background:#512b2b;border-color:#b86a6a}
+.rhino-navegacion a:focus-visible,.rhino-navegacion button:focus-visible{outline:3px solid #ffd566;outline-offset:2px}
+@media(max-width:520px){.rhino-navegacion{padding:10px;gap:6px}.rhino-navegacion a,.rhino-navegacion button{flex:1;padding:10px 7px;font-size:12px}}
+@media print{.rhino-navegacion{display:none}}
+</style>
 </head>
 
 <body>
+<nav class="rhino-navegacion" aria-label="Navegación administrativa">
+<a href="admin.html">← Volver al panel</a>
+<a href="index.html">🏪 Ir a la tienda</a>
+<button type="button" onclick="cerrarSesionRhino(this)">🚪 Cerrar sesión</button>
+</nav>
+
 
 
 <div id="modalDocumentoRhino" role="dialog" aria-modal="true" aria-label="Vista de documento" style="display:none;position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,.75);padding:16px;">
@@ -400,9 +415,7 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 <main class="container">
 
     <div class="barra">
-        <a href="admin.html" class="volver">
-            ← Volver al panel
-        </a>
+        
 
         <button
             type="button"
@@ -413,6 +426,7 @@ if (!sessionStorage.getItem("tokenAdmin")) {
         </button>
     </div>
 
+    <button type="button" class="btn-actualizar" onclick="marcarNovedadesRevisadasRhino()">✓ Marcar novedades como revisadas</button>
     <div id="resumenAtencion" class="resumen-atencion"></div>
 
     <div class="panel">
@@ -654,30 +668,47 @@ function pedidoYaRevisado(pedido){
 }
 function tieneActividadNueva(pedido){
     if(pedidoYaRevisado(pedido)) return false;
-    const anterior=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
-    if(anterior!==null) return true;
-    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
-    const fecha=fechaMilisegundos(pedido.fecha_pedido);
-    return ultima>0&&fecha>0&&ultima>fecha+60000;
+    const guardada=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
+    if(guardada===null) return false;
+    try{
+        const anterior=JSON.parse(guardada);
+        const actual=JSON.parse(firmaNovedadPedido(pedido));
+        // Sólo nuevas cargas o solicitudes del cliente; un cambio administrativo no es una novedad sin leer.
+        return [3,4,7,8].some(function(i){return !!actual[i]&&actual[i]!==anterior[i];});
+    }catch(error){return false;}
 }
 function marcarPedidoRevisado(pedido){
     if(!pedido||!pedido.id_pedido) return;
     localStorage.setItem(claveRevisionPedido(pedido.id_pedido),String(fechaMilisegundos(pedido.ultima_actualizacion)||Date.now()));
     localStorage.setItem(claveRevisionPedido(pedido.id_pedido)+"_firma",firmaNovedadPedido(pedido));
 }
+function normalizarEstadoRhino(valor){
+    return String(valor||"").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
 function obtenerAlertaPedido(pedido){
     if(pedidoYaRevisado(pedido)) return null;
-    const estadoPedido=String(pedido.estado_pedido||"").trim().toUpperCase();
-    const estadoPago=String(pedido.estado_pago||"").trim().toUpperCase();
-    const devolucion=String(pedido.estado_devolucion||"").trim().toUpperCase();
-    const reactivacion=String(pedido.solicitud_reactivacion||"").trim().toUpperCase();
-    if(estadoPago==="EN VERIFICACIÓN") return {texto:"🟠 COMPROBANTE NUEVO",clase:"alerta-comprobante"};
-    if(devolucion&&devolucion!=="DEVUELTO"&&devolucion!=="COMPLETADO") return {texto:"💰 DEVOLUCIÓN PENDIENTE",clase:"alerta-devolucion"};
-    if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO") return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
-    if(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido) return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
-    if(tieneActividadNueva(pedido)) return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
+    const estadoPedido=normalizarEstadoRhino(pedido.estado_pedido);
+    const estadoPago=normalizarEstadoRhino(pedido.estado_pago);
+    const devolucion=normalizarEstadoRhino(pedido.estado_devolucion);
+    const reactivacion=normalizarEstadoRhino(pedido.solicitud_reactivacion);
+    const guardada=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
+    const nuevaActividad=tieneActividadNueva(pedido);
+    if(guardada!==null&&!nuevaActividad) return null;
+    if(estadoPago==="EN VERIFICACION") return {texto:"🟠 COMPROBANTE NUEVO",clase:"alerta-comprobante"};
+    if(reactivacion==="SOLICITADA"||devolucion==="REACTIVACION SOLICITADA") return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
+    if(["DEVOLUCION SOLICITADA","DEVOLUCION PENDIENTE"].includes(devolucion)) return {texto:"💰 DEVOLUCIÓN PENDIENTE",clase:"alerta-devolucion"};
+    const pagado=["PAGO CONFIRMADO","PAGADO","CONFIRMADO"].includes(estadoPago);
+    if(guardada===null&&!pagado&&(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido)) return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
+    if(nuevaActividad) return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
     return null;
 }
+function marcarNovedadesRevisadasRhino(){
+    pedidosCargados.forEach(marcarPedidoRevisado);
+    mostrarPedidos();
+}
+window.addEventListener("storage",function(evento){
+    if(evento.key===null||evento.key.startsWith("rhino_revision_pedido_")) mostrarPedidos();
+});
 
 function obtenerUrlVistaNota(url){
     const texto=String(url||"").trim();
@@ -968,7 +999,8 @@ function mostrarPedidos(){
         estadoCarga.style.display="block";
         estadoCarga.textContent="No hay pedidos registrados.";
         tablaContenedor.style.display="none";
-        resumen.style.display="none";
+        resumen.style.display="block";
+        resumen.textContent="✓ 0 novedades sin revisar.";
         return;
     }
 
@@ -1019,8 +1051,8 @@ function mostrarPedidos(){
         resumen.textContent="⚠️ "+requierenAtencion+
             (requierenAtencion===1?" pedido requiere atención.":" pedidos requieren atención.");
     }else{
-        resumen.style.display="none";
-        resumen.textContent="";
+        resumen.style.display="block";
+        resumen.textContent="✓ 0 novedades sin revisar.";
     }
 
     estadoCarga.style.display="none";
@@ -1893,5 +1925,28 @@ cargarPedidos();
 
 </script>
 
+
+<script>
+async function cerrarSesionRhino(boton){
+    const token=sessionStorage.getItem("tokenAdmin");
+    if(boton) boton.disabled=true;
+    try{
+        if(token){
+            const control=new AbortController();
+            const espera=setTimeout(function(){control.abort();},12000);
+            try{
+                const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"cerrarSesionAdmin",tokenAdmin:token}),signal:control.signal});
+                const resultado=await respuesta.json();
+                if(!respuesta.ok||!resultado.ok) throw new Error("No se pudo cerrar la sesión en el servidor.");
+            }finally{clearTimeout(espera);}
+        }
+    }catch(error){
+        alert("Se cerrará la sesión en este navegador. No se pudo confirmar el cierre en el servidor; allí vencerá al finalizar su plazo.");
+    }finally{
+        sessionStorage.removeItem("tokenAdmin");
+        window.location.replace("index.html");
+    }
+}
+</script>
 </body>
 </html>
