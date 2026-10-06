@@ -342,6 +342,94 @@ if (!sessionStorage.getItem("tokenAdmin")) {
 
 }
 
+
+// Guarda el JPEG y permite abrirlo/compartirlo desde el celular.
+function ofrecerJpegRhino(canvas,nombre){
+    return new Promise(function(resolve,reject){
+        canvas.toBlob(function(blob){
+            if(!blob){reject(new Error("No se pudo generar la imagen JPEG."));return;}
+            const url=URL.createObjectURL(blob);
+            const fondo=document.createElement("div");
+            fondo.style.cssText="position:fixed;inset:0;z-index:10000;background:#000b;display:flex;align-items:center;justify-content:center;padding:15px";
+            const caja=document.createElement("div");
+            caja.style.cssText="background:white;padding:20px;border-radius:12px;max-width:420px;width:100%;max-height:90vh;overflow:auto;text-align:center;color:#222";
+            const titulo=document.createElement("h3");titulo.textContent=nombre;
+            const vista=document.createElement("img");vista.src=url;vista.alt="Documento listo para imprimir";
+            vista.style.cssText="max-width:100%;max-height:45vh;object-fit:contain;border:1px solid #ddd";
+            const texto=document.createElement("p");texto.textContent="Descarga el JPEG e impórtalo en la aplicación de la impresora. Selecciona papel de 58 mm y ajusta el ancho sin deformar la imagen.";
+            const enlace=document.createElement("a");enlace.href=url;enlace.download=nombre;enlace.textContent="⬇ Descargar JPEG";
+            enlace.style.cssText="display:block;background:#253e58;color:white;padding:12px;margin:10px 0;border-radius:6px;text-decoration:none";
+            const compartir=document.createElement("button");compartir.textContent="Compartir imagen";
+            const fichero=typeof File!=="undefined"?new File([blob],nombre,{type:"image/jpeg"}):null;
+            if(fichero&&navigator.canShare&&navigator.canShare({files:[fichero]})){
+                compartir.onclick=async function(){try{await navigator.share({files:[fichero],title:nombre});}catch(e){if(e.name!=="AbortError")alert("No se pudo compartir. Utiliza Descargar JPEG.");}};
+            }else{compartir.style.display="none";}
+            const cerrar=document.createElement("button");cerrar.textContent="Cerrar";cerrar.style.margin="10px";
+            function salir(){fondo.remove();URL.revokeObjectURL(url);document.removeEventListener("keydown",tecla);}
+            function tecla(e){if(e.key==="Escape")salir();}
+            cerrar.onclick=salir;fondo.onclick=function(e){if(e.target===fondo)salir();};
+            document.addEventListener("keydown",tecla);
+            caja.append(titulo,vista,texto,enlace,compartir,cerrar);fondo.append(caja);document.body.append(fondo);
+            resolve();
+        },"image/jpeg",1);
+    });
+}
+function blancoNegroRhino(canvas){
+    const ctx=canvas.getContext("2d"),datos=ctx.getImageData(0,0,canvas.width,canvas.height);
+    for(let i=0;i<datos.data.length;i+=4){
+        const valor=(datos.data[i]*0.299+datos.data[i+1]*0.587+datos.data[i+2]*0.114)<180?0:255;
+        datos.data[i]=datos.data[i+1]=datos.data[i+2]=valor;datos.data[i+3]=255;
+    }
+    ctx.putImageData(datos,0,0);
+}
+
+async function descargarEtiquetaJpegRhino(id){
+    const producto=productos.find(p=>String(p.id)===String(id));
+    if(!producto){alert("No se encontró el producto.");return;}
+    const formato=prompt("Formato JPEG para papel de 58 mm:\n1 = 58 × 40 mm\n2 = 58 × 50 mm","1");
+    if(formato===null)return;
+    if(!["1","2"].includes(formato)){alert("Selecciona 1 o 2.");return;}
+    try{
+        // Valida los caracteres con el mismo generador utilizado para la Epson.
+        crearCodigoBarras(producto.id);
+        const canvas=document.createElement("canvas");canvas.width=684;canvas.height=formato==="1"?472:590;
+        const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#000";
+        ctx.textAlign="center";ctx.textBaseline="top";
+        let y=22;
+        try{
+            const imagen=new Image();
+            await new Promise((resolve,reject)=>{imagen.onload=resolve;imagen.onerror=reject;imagen.src=new URL("logo-rhino.png",location.href).href;});
+            ctx.drawImage(imagen,(684-56*imagen.width/imagen.height)/2,y,56*imagen.width/imagen.height,56);y+=64;
+        }catch(e){/* La marca escrita sigue visible si falta la imagen. */}
+        ctx.font="bold 24px Arial";ctx.fillText("RHINO TACTICAL ARMOR",342,y);y+=34;
+        const nombre=String(producto.nombre||"PRODUCTO");
+        let lineas=[],fuente=30;
+        function ajustar(){
+            ctx.font="bold "+fuente+"px Arial";lineas=[];let linea="";
+            for(const letra of nombre){if(ctx.measureText(linea+letra).width>628&&linea){lineas.push(linea.trim());linea=letra;}else linea+=letra;}
+            if(linea)lineas.push(linea.trim());
+        }
+        ajustar();while(lineas.length>3&&fuente>14){fuente--;ajustar();}
+        if(lineas.length>3)throw new Error("El nombre es demasiado largo para esta etiqueta. Utiliza un nombre más corto o el formato de impresión existente.");
+        lineas.forEach(linea=>{ctx.fillText(linea,342,y);y+=fuente+4;});
+        y+=10;
+        const numero=Number(String(producto.precio||0).replace(",","."));
+        const precio=Number.isFinite(numero)?numero.toLocaleString("es-BO",{minimumFractionDigits:2,maximumFractionDigits:2}):String(producto.precio||"");
+        ctx.font="bold 38px Arial";ctx.fillText("Bs "+precio,342,y);
+        const contenido="*"+String(producto.id).toUpperCase()+"*";
+        let unidades=16;for(const c of contenido){unidades+=Array.from(PATRONES_CODE39[c]).reduce((s,v)=>s+(v==="w"?3:1),0)+1;}
+        const escala=Math.floor(628/unidades);
+        if(escala<2)throw new Error("El código es demasiado largo para un código de barras legible en este formato.");
+        const altoBarras=105,inicioY=canvas.height-160;
+        if(y+48>inicioY-10)throw new Error("El contenido no cabe. Selecciona el formato de 58 × 50 mm.");
+        let x=Math.floor((684-unidades*escala)/2)+8*escala;
+        for(const c of contenido){const patron=PATRONES_CODE39[c];for(let i=0;i<patron.length;i++){const ancho=(patron[i]==="w"?3:1)*escala;if(i%2===0)ctx.fillRect(x,inicioY,ancho,altoBarras);x+=ancho;}x+=escala;}
+        ctx.font="bold 26px Arial";ctx.fillText(String(producto.id).toUpperCase(),342,canvas.height-42);
+        blancoNegroRhino(canvas);
+        await ofrecerJpegRhino(canvas,"ETIQUETA_"+String(producto.id).replace(/[^A-Za-z0-9_-]/g,"")+"_58x"+(formato==="1"?"40":"50")+"mm.jpg");
+    }catch(error){alert(error.message||"No se pudo generar la etiqueta JPEG.");}
+}
+
 </script>
 
 <body>
@@ -741,6 +829,10 @@ function mostrarProductos(){
                 '<button class="etiqueta-btn" onclick="imprimirEtiqueta(\'' +
                     String(producto.id) +
                 '\')">🏷️ Imprimir etiqueta</button>' +
+
+                '<button class="etiqueta-btn" onclick="descargarEtiquetaJpegRhino(\'' +
+                    String(producto.id) +
+                '\')">⬇ Etiqueta JPEG 58 mm</button>' +
 
                 '<button class="eliminar" onclick="eliminarProducto(\'' +
                     String(producto.id) +
