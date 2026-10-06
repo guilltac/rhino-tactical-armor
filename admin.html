@@ -20,20 +20,38 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 .badge-pedidos{display:none;position:absolute;top:10px;right:10px;background:#c62828;color:#fff;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:bold;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .back{display:inline-block;margin-top:30px;padding:12px 20px;background:#222;color:white;text-decoration:none;border-radius:6px}
 </style>
+
+<style id="rhinoNavegacionEstilos">
+.rhino-navegacion{display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;background:#151815;border-bottom:1px solid #537a39;position:sticky;top:0;z-index:90}
+.rhino-navegacion a,.rhino-navegacion button{display:inline-flex;align-items:center;justify-content:center;margin:0;padding:10px 14px;border:1px solid #77965d;border-radius:6px;color:#fff;background:#263521;text-decoration:none;font:600 14px Arial,sans-serif;cursor:pointer}
+.rhino-navegacion button{background:#512b2b;border-color:#b86a6a}
+.rhino-navegacion a:focus-visible,.rhino-navegacion button:focus-visible{outline:3px solid #ffd566;outline-offset:2px}
+@media(max-width:520px){.rhino-navegacion{padding:10px;gap:6px}.rhino-navegacion a,.rhino-navegacion button{flex:1;padding:10px 7px;font-size:12px}}
+@media print{.rhino-navegacion{display:none}}
+</style>
 </head>
 <body>
 <div id="accesoAdmin" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111;padding:20px;">
 <div style="width:100%;max-width:380px;background:#1c1c1c;border:1px solid #444;border-radius:12px;padding:35px;text-align:center;color:white;">
 <h1 style="margin-top:0;">RHINO TACTICAL ARMOR</h1>
 <p style="color:#aaa;">🔐 ACCESO ADMINISTRATIVO</p>
-<input type="password" id="claveAdmin" placeholder="Contraseña" style="width:100%;padding:14px;margin:20px 0 12px;border-radius:6px;border:1px solid #555;background:#111;color:white;font-size:16px;">
+<div id="formularioAccesoRhino">
+<input type="password" id="claveAdmin" placeholder="Contraseña" autocomplete="current-password" style="width:100%;padding:14px;margin:20px 0 12px;border-radius:6px;border:1px solid #555;background:#111;color:white;font-size:16px;">
 <button id="btnIngresarAdmin" style="width:100%;padding:14px;border:0;border-radius:6px;background:#5bb42d;font-weight:bold;cursor:pointer;font-size:16px;">INGRESAR</button>
-<div id="mensajeAcceso" style="margin-top:15px;color:#ff6b6b;min-height:20px;"></div>
+</div>
+<div id="mensajeAcceso" role="status" style="margin-top:15px;color:#ff6b6b;min-height:20px;"></div>
+<button id="reintentarSesionRhino" type="button" style="display:none;padding:12px;" onclick="actualizarIndicadorPedidos()">Reintentar conexión</button>
 <a href="index.html" style="display:inline-block;margin-top:15px;color:#aaa;text-decoration:none;">← Volver a la tienda</a>
 </div>
 </div>
-
 <div id="panelAdmin" style="display:none;">
+
+<nav class="rhino-navegacion" aria-label="Navegación administrativa">
+<a href="admin.html">← Volver al panel</a>
+<a href="index.html">🏪 Ir a la tienda</a>
+<button type="button" onclick="cerrarSesionRhino(this)">🚪 Cerrar sesión</button>
+</nav>
+
 <header class="admin-header">
 <h1>RHINO TACTICAL ARMOR</h1>
 <p>Panel de administración</p>
@@ -41,165 +59,176 @@ body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#222}
 <main class="container">
 <h2>Administración de la tienda</h2>
 <div class="dashboard">
-<a href="productos.html" class="card">
-<div class="card-icon">➕</div>
-<h2>Agregar producto</h2>
-<p>Registrar un nuevo producto</p>
-</a>
-<a href="gestionar-productos.html" class="card">
-<div class="card-icon">📦</div>
-<h2>Gestionar productos</h2>
-<p>Editar y eliminar productos</p>
-</a>
-<a href="gestionar-pedidos.html" class="card">
-<div id="badgePedidos" class="badge-pedidos">0</div>
-<div class="card-icon">📋</div>
-<h2>Gestionar pedidos</h2>
-<p id="textoPedidos">Revisar pedidos, pagos, envíos y entregas</p>
-</a>
-
-<!-- Categorías se administrarán desde una sola pantalla -->
-<a href="gestionar-categorias.html" class="card">
-<div class="card-icon">🏷️</div>
-<h2>Gestionar categorías</h2>
-<p>Agregar, editar, activar y eliminar categorías</p>
-</a>
-
-<!-- Nueva arquitectura preparada para múltiples tiendas/bases -->
-<a href="gestionar-entregas.html" class="card">
-<div class="card-icon">🚚</div>
-<h2>Gestionar entregas</h2>
-<p>Consultar y modificar tarifas de entrega a domicilio</p>
-</a>
-<a href="gestionar-bases.html" class="card">
-<div class="card-icon">📍</div>
-<h2>Bases / Tiendas RHINO</h2>
-<p>Agregar, editar y administrar puntos de despacho y su ubicación</p>
-</a>
-
-<div class="card">
-<div class="card-icon">📊</div>
-<h2>Inventario</h2>
-<p>Controlar existencias y stock</p>
+<a href="productos.html" class="card"><div class="card-icon">➕</div><h2>Agregar producto</h2><p>Registrar un nuevo producto</p></a>
+<a href="gestionar-productos.html" class="card"><div class="card-icon">📦</div><h2>Gestionar productos</h2><p>Editar y eliminar productos</p></a>
+<a href="gestionar-pedidos.html" class="card"><div id="badgePedidos" class="badge-pedidos">0</div><div class="card-icon">📋</div><h2>Gestionar pedidos</h2><p id="textoPedidos">Revisar pedidos, pagos, envíos y entregas</p></a>
+<a href="gestionar-categorias.html" class="card"><div class="card-icon">🏷️</div><h2>Gestionar categorías</h2><p>Agregar, editar, activar y eliminar categorías</p></a>
+<a href="gestionar-entregas.html" class="card"><div class="card-icon">🚚</div><h2>Gestionar entregas</h2><p>Consultar y modificar tarifas de entrega a domicilio</p></a>
+<a href="gestionar-bases.html" class="card"><div class="card-icon">📍</div><h2>Bases / Tiendas RHINO</h2><p>Agregar, editar y administrar puntos de despacho y su ubicación</p></a>
+<div class="card"><div class="card-icon">📊</div><h2>Inventario</h2><p>Controlar existencias y stock</p></div>
+<div class="card"><div class="card-icon">🔥</div><h2>Promociones</h2><p>Administrar productos en promoción</p></div>
 </div>
-<div class="card">
-<div class="card-icon">🔥</div>
-<h2>Promociones</h2>
-<p>Administrar productos en promoción</p>
-</div>
-</div>
-<a href="index.html" class="back">← Volver a la tienda</a>
+<p id="estadoPanelRhino" role="status"></p>
 </main>
 </div>
-
 <script>
 const URL_SERVIDOR="https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec";
 document.getElementById("btnIngresarAdmin").addEventListener("click",ingresarAdmin);
-document.getElementById("claveAdmin").addEventListener("keydown",function(e){
-    if(e.key==="Enter") ingresarAdmin();
-});
-
+document.getElementById("claveAdmin").addEventListener("keydown",function(e){if(e.key==="Enter") ingresarAdmin();});
 function claveRevisionPedido(idPedido){
     return "rhino_revision_pedido_"+String(idPedido||"").trim().toUpperCase();
 }
+
 function fechaMilisegundos(valor){
     if(!valor) return 0;
     const fecha=new Date(valor);
     const tiempo=fecha.getTime();
     return Number.isFinite(tiempo)?tiempo:0;
 }
+
+function firmaNovedadPedido(pedido){
+    return JSON.stringify([pedido.ultima_actualizacion||"",pedido.estado_pedido||"",pedido.estado_pago||"",pedido.comprobante_pago||"",pedido.fecha_comprobante||"",pedido.estado_devolucion||"",pedido.solicitud_reactivacion||"",pedido.fecha_solicitud_reactivacion||"",pedido.fecha_solicitud_devolucion||""]);
+}
+function pedidoYaRevisado(pedido){
+    const clave=claveRevisionPedido(pedido.id_pedido)+"_firma";
+    return localStorage.getItem(clave)===firmaNovedadPedido(pedido);
+}
 function tieneActividadNueva(pedido){
-    const id=String(pedido.id_pedido||"").trim();
-    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
-    if(!id||!ultima) return false;
-    const guardado=Number(localStorage.getItem(claveRevisionPedido(id))||0);
-    if(guardado>0) return ultima>guardado;
-    const fechaPedido=fechaMilisegundos(pedido.fecha_pedido);
-    return fechaPedido>0 && ultima>fechaPedido+60000;
+    if(pedidoYaRevisado(pedido)) return false;
+    const guardada=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
+    if(guardada===null) return false;
+    try{
+        const anterior=JSON.parse(guardada);
+        const actual=JSON.parse(firmaNovedadPedido(pedido));
+        // Sólo nuevas cargas o solicitudes del cliente; un cambio administrativo no es una novedad sin leer.
+        return [3,4,7,8].some(function(i){return !!actual[i]&&actual[i]!==anterior[i];});
+    }catch(error){return false;}
 }
-function pedidoRequiereAtencion(pedido){
-    const estadoPedido=String(pedido.estado_pedido||"").trim().toUpperCase();
-    const estadoPago=String(pedido.estado_pago||"").trim().toUpperCase();
-    const devolucion=String(pedido.estado_devolucion||"").trim().toUpperCase();
-    const reactivacion=String(pedido.solicitud_reactivacion||"").trim().toUpperCase();
-
-    if(estadoPago==="EN VERIFICACIÓN") return true;
-    if(devolucion&&devolucion!=="DEVUELTO"&&devolucion!=="COMPLETADO") return true;
-    if(reactivacion&&reactivacion!=="NO"&&reactivacion!=="REACTIVADO"&&reactivacion!=="COMPLETADO") return true;
-
-    const id=String(pedido.id_pedido||"").trim();
-    const revision= id ? Number(localStorage.getItem(claveRevisionPedido(id))||0) : 0;
-    const ultima=fechaMilisegundos(pedido.ultima_actualizacion);
-    const yaRevisado=revision>0&&(!ultima||revision>=ultima);
-
-    if((estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido)&&!yaRevisado) return true;
-    return tieneActividadNueva(pedido);
+function marcarPedidoRevisado(pedido){
+    if(!pedido||!pedido.id_pedido) return;
+    localStorage.setItem(claveRevisionPedido(pedido.id_pedido),String(fechaMilisegundos(pedido.ultima_actualizacion)||Date.now()));
+    localStorage.setItem(claveRevisionPedido(pedido.id_pedido)+"_firma",firmaNovedadPedido(pedido));
 }
-function actualizarIndicadorPedidos(){
+function normalizarEstadoRhino(valor){
+    return String(valor||"").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+function obtenerAlertaPedido(pedido){
+    if(pedidoYaRevisado(pedido)) return null;
+    const estadoPedido=normalizarEstadoRhino(pedido.estado_pedido);
+    const estadoPago=normalizarEstadoRhino(pedido.estado_pago);
+    const devolucion=normalizarEstadoRhino(pedido.estado_devolucion);
+    const reactivacion=normalizarEstadoRhino(pedido.solicitud_reactivacion);
+    const guardada=localStorage.getItem(claveRevisionPedido(pedido.id_pedido)+"_firma");
+    const nuevaActividad=tieneActividadNueva(pedido);
+    if(guardada!==null&&!nuevaActividad) return null;
+    if(estadoPago==="EN VERIFICACION") return {texto:"🟠 COMPROBANTE NUEVO",clase:"alerta-comprobante"};
+    if(reactivacion==="SOLICITADA"||devolucion==="REACTIVACION SOLICITADA") return {texto:"🔄 REACTIVACIÓN PENDIENTE",clase:"alerta-reactivacion"};
+    if(["DEVOLUCION SOLICITADA","DEVOLUCION PENDIENTE"].includes(devolucion)) return {texto:"💰 DEVOLUCIÓN PENDIENTE",clase:"alerta-devolucion"};
+    const pagado=["PAGO CONFIRMADO","PAGADO","CONFIRMADO"].includes(estadoPago);
+    if(guardada===null&&!pagado&&(estadoPedido==="PEDIDO RECIBIDO"||!estadoPedido)) return {texto:"🔴 NUEVO",clase:"alerta-nuevo"};
+    if(nuevaActividad) return {texto:"🔵 ACTIVIDAD NUEVA",clase:"alerta-actividad"};
+    return null;
+}
+
+let pedidosPanelRhino=[];
+let consultandoPanelRhino=false;
+function pedidoRequiereAtencion(pedido){return obtenerAlertaPedido(pedido)!==null;}
+function pintarIndicadorRhino(){
+    const cantidad=pedidosPanelRhino.filter(pedidoRequiereAtencion).length;
+    const badge=document.getElementById("badgePedidos");
+    const texto=document.getElementById("textoPedidos");
+    badge.textContent=cantidad===1?"🔴 1 novedad":"🔴 "+cantidad+" novedades";
+    badge.style.display=cantidad>0?"block":"none";
+    texto.textContent=cantidad>0?(cantidad===1?"1 pedido requiere atención":cantidad+" pedidos requieren atención"):"Revisar pedidos, pagos, envíos y entregas";
+}
+function mostrarAccesoRhino(mensaje){
+    document.getElementById("panelAdmin").style.display="none";
+    document.getElementById("accesoAdmin").style.display="flex";
+    document.getElementById("formularioAccesoRhino").style.display="block";
+    document.getElementById("mensajeAcceso").textContent=mensaje||"";
+    document.getElementById("reintentarSesionRhino").style.display="none";
+}
+async function actualizarIndicadorPedidos(){
     const token=sessionStorage.getItem("tokenAdmin")||"";
-    if(!token) return;
-
-    const datos=new URLSearchParams();
-    datos.append("accion","listarPedidos");
-    datos.append("tokenAdmin",token);
-
-    fetch(URL_SERVIDOR,{method:"POST",body:datos})
-    .then(function(respuesta){return respuesta.json();})
-    .then(function(resultado){
-        if(!resultado.autorizado) return;
-        if(!resultado.ok) return;
-
-        const pedidos=resultado.pedidos||[];
-        const cantidad=pedidos.filter(pedidoRequiereAtencion).length;
-        const badge=document.getElementById("badgePedidos");
-        const texto=document.getElementById("textoPedidos");
-
-        if(cantidad>0){
-            badge.textContent=cantidad===1?"🔴 1 novedad":"🔴 "+cantidad+" novedades";
-            badge.style.display="block";
-            texto.textContent=cantidad===1
-                ?"1 pedido requiere atención"
-                :cantidad+" pedidos requieren atención";
-        }else{
-            badge.style.display="none";
-            texto.textContent="Revisar pedidos, pagos, envíos y entregas";
+    if(!token){mostrarAccesoRhino();return;}
+    if(consultandoPanelRhino) return;
+    consultandoPanelRhino=true;
+    const control=new AbortController();
+    const espera=setTimeout(function(){control.abort();},15000);
+    try{
+        const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"listarPedidos",tokenAdmin:token}),signal:control.signal});
+        if(!respuesta.ok) throw new Error("Error de conexión");
+        const resultado=await respuesta.json();
+        if(sessionStorage.getItem("tokenAdmin")!==token) return;
+        if(resultado.autorizado===false){
+            sessionStorage.removeItem("tokenAdmin");
+            mostrarAccesoRhino("La sesión venció. Ingresa nuevamente.");return;
         }
-    })
-    .catch(function(error){
-        console.error("No se pudo actualizar el indicador de pedidos:",error);
-    });
+        if(resultado.autorizado!==true||!resultado.ok) throw new Error(resultado.mensaje||"Respuesta no válida");
+        pedidosPanelRhino=resultado.pedidos||[];
+        document.getElementById("accesoAdmin").style.display="none";
+        document.getElementById("panelAdmin").style.display="block";
+        document.getElementById("estadoPanelRhino").textContent="";
+        document.getElementById("reintentarSesionRhino").style.display="none";
+        pintarIndicadorRhino();
+    }catch(error){
+        if(sessionStorage.getItem("tokenAdmin")!==token) return;
+        document.getElementById("mensajeAcceso").textContent="No se pudo comprobar la sesión. Reintenta la conexión.";
+        document.getElementById("reintentarSesionRhino").style.display="inline-block";
+        document.getElementById("estadoPanelRhino").textContent="No se pudieron actualizar las novedades. Se reintentará al volver a esta pantalla.";
+    }finally{clearTimeout(espera);consultandoPanelRhino=false;}
 }
-
-function ingresarAdmin(){
+async function ingresarAdmin(){
+    const boton=document.getElementById("btnIngresarAdmin");
+    if(boton.disabled) return;
     const clave=document.getElementById("claveAdmin").value;
     const mensaje=document.getElementById("mensajeAcceso");
-    if(!clave){
-        mensaje.textContent="Ingrese la contraseña.";
-        return;
-    }
-    mensaje.style.color="#aaa";
-    mensaje.textContent="Verificando acceso...";
-    const datos=new URLSearchParams();
-    datos.append("accion","verificarAdmin");
-    datos.append("clave",clave);
-    fetch(URL_SERVIDOR,{method:"POST",body:datos})
-    .then(function(respuesta){return respuesta.json();})
-    .then(function(resultado){
-        if(resultado.autorizado){
+    if(!clave){mensaje.textContent="Ingrese la contraseña.";return;}
+    boton.disabled=true;mensaje.style.color="#aaa";mensaje.textContent="Verificando acceso...";
+    try{
+        const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"verificarAdmin",clave})});
+        if(!respuesta.ok) throw new Error("Error de conexión");
+        const resultado=await respuesta.json();
+        if(resultado.autorizado&&resultado.token){
             sessionStorage.setItem("tokenAdmin",resultado.token);
-            document.getElementById("accesoAdmin").style.display="none";
-            document.getElementById("panelAdmin").style.display="block";
-            actualizarIndicadorPedidos();
-        }else{
-            mensaje.style.color="#ff6b6b";
-            mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";
+            document.getElementById("claveAdmin").value="";
+            document.getElementById("formularioAccesoRhino").style.display="none";
+            await actualizarIndicadorPedidos();
+        }else{mensaje.style.color="#ff6b6b";mensaje.textContent=resultado.mensaje||"Contraseña incorrecta.";}
+    }catch(error){mensaje.style.color="#ff6b6b";mensaje.textContent="No se pudo verificar el acceso.";}
+    finally{boton.disabled=false;}
+}
+window.addEventListener("storage",function(e){if(e.key===null||e.key.startsWith("rhino_revision_pedido_")) pintarIndicadorRhino();});
+window.addEventListener("pageshow",actualizarIndicadorPedidos);
+window.addEventListener("focus",actualizarIndicadorPedidos);
+document.addEventListener("visibilitychange",function(){if(!document.hidden) actualizarIndicadorPedidos();});
+if(sessionStorage.getItem("tokenAdmin")){
+    document.getElementById("formularioAccesoRhino").style.display="none";
+    document.getElementById("mensajeAcceso").textContent="Comprobando sesión...";
+    actualizarIndicadorPedidos();
+}
+</script>
+
+<script>
+async function cerrarSesionRhino(boton){
+    const token=sessionStorage.getItem("tokenAdmin");
+    if(boton) boton.disabled=true;
+    try{
+        if(token){
+            const control=new AbortController();
+            const espera=setTimeout(function(){control.abort();},12000);
+            try{
+                const respuesta=await fetch(URL_SERVIDOR,{method:"POST",body:new URLSearchParams({accion:"cerrarSesionAdmin",tokenAdmin:token}),signal:control.signal});
+                const resultado=await respuesta.json();
+                if(!respuesta.ok||!resultado.ok) throw new Error("No se pudo cerrar la sesión en el servidor.");
+            }finally{clearTimeout(espera);}
         }
-    })
-    .catch(function(error){
-        mensaje.style.color="#ff6b6b";
-        mensaje.textContent="No se pudo verificar el acceso.";
-        console.error(error);
-    });
+    }catch(error){
+        alert("Se cerrará la sesión en este navegador. No se pudo confirmar el cierre en el servidor; allí vencerá al finalizar su plazo.");
+    }finally{
+        sessionStorage.removeItem("tokenAdmin");
+        window.location.replace("index.html");
+    }
 }
 </script>
 </body>
