@@ -1,66 +1,41 @@
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Tutoriales | RHINO TACTICAL ARMOR</title>
-    <style>
-    *{box-sizing:border-box}
-    body{margin:0;background:#0d0f0e;color:#f3f3f3;font-family:Arial,sans-serif}
-    header{background:#111512;border-bottom:1px solid #2b322d;padding:18px 20px;position:sticky;top:0;z-index:10}
-    .header-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px}
-    .brand{font-weight:900;letter-spacing:1px}.brand span{display:block;font-size:12px;color:#aeb7b0;margin-top:4px}
-    .back{border:1px solid #3b443e;background:#171c18;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700}
-    main{max-width:1180px;margin:auto;padding:28px 18px 50px}
-    .hero{padding:22px;background:#141815;border:1px solid #29302b;border-radius:14px;margin-bottom:24px}
-    .hero h1{margin:0 0 10px;font-size:28px}.hero p{margin:0;color:#c3cbc5;line-height:1.55}
-    .filters{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
-    .filter{border:1px solid #39423c;background:#171c18;color:#fff;border-radius:999px;padding:9px 13px;cursor:pointer}
-    .filter.active{background:#00c853;color:#071108;border-color:#00c853;font-weight:800}
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-    .card{background:#141815;border:1px solid #29302b;border-radius:14px;overflow:hidden}
-    .video{aspect-ratio:16/9;background:#080a09;display:flex;align-items:center;justify-content:center;color:#7f8a82}
-    .video iframe{width:100%;height:100%;border:0}
-    .info{padding:16px}.tag{font-size:11px;font-weight:800;color:#00c853;text-transform:uppercase}.info h3{margin:8px 0}.info p{margin:0;color:#b8c0ba;font-size:14px;line-height:1.45}
-    .empty{padding:35px;text-align:center;border:1px dashed #3b443e;border-radius:14px;color:#aeb7b0}
-    @media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:560px){.grid{grid-template-columns:1fr}.header-inner{align-items:flex-start}.hero h1{font-size:23px}}
-    </style>
-    </head>
-    <body>
-    <header>
-    <div class="header-inner">
-    <div class="brand">RHINO TACTICAL ARMOR<span>PROTECCIÓN · RESISTENCIA · CONFIANZA</span></div>
-    <a class="back" href="index.html">← VOLVER A LA TIENDA</a>
-    </div>
-    </header>
-    <main>
-    <section class="hero">
-    <h1>▶ TUTORIALES RHINO</h1>
-    <p>Videos prácticos sobre uso de equipo, primeros auxilios, uniformes y contenidos de orientación. Los videos se reproducirán desde YouTube.</p>
-    </section>
-    <div class="filters">
-    <button class="filter active" onclick="filtrar('todos',this)">Todos</button>
-    <button class="filter" onclick="filtrar('equipo',this)">Equipo</button>
-    <button class="filter" onclick="filtrar('aph',this)">Primeros auxilios / APH</button>
-    <button class="filter" onclick="filtrar('uniformes',this)">Uniformes</button>
-    <button class="filter" onclick="filtrar('otros',this)">Otros</button>
-    </div>
-    <div id="videos" class="grid">
-    <div class="empty" style="grid-column:1/-1">
-    AÚN NO HAY VIDEOS PUBLICADOS.<br><br>
-    Esta página ya está preparada para agregar posteriormente tus videos de YouTube.
-    </div>
-    </div>
-    </main>
-    <script>
-    function filtrar(categoria,boton){
-        document.querySelectorAll(".filter").forEach(b=>b.classList.remove("active"));
-        boton.classList.add("active");
-        document.querySelectorAll("[data-categoria]").forEach(card=>{
-            card.style.display=categoria==="todos"||card.dataset.categoria===categoria?"block":"none";
-        });
-    }
-    </script>
-    </body>
-    </html>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Tutoriales y normativa | RHINO TACTICAL ARMOR</title><style>
+*{box-sizing:border-box}body{margin:0;background:#0d0f0e;color:#f3f3f3;font-family:Arial,sans-serif}header{background:#111512;border-bottom:1px solid #2b322d;padding:18px 20px;position:sticky;top:0;z-index:10}.header-inner{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-weight:900;letter-spacing:1px}.brand span{display:block;font-size:12px;color:#aeb7b0;margin-top:4px}.back,.link{border:1px solid #3b443e;background:#171c18;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block}main{max-width:1180px;margin:auto;padding:28px 18px 50px}.hero{padding:22px;background:#141815;border:1px solid #29302b;border-radius:14px;margin-bottom:24px}.hero h1{margin:0 0 10px;font-size:28px}.hero p{margin:0;color:#c3cbc5;line-height:1.55}.filters{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.filter{border:1px solid #39423c;background:#171c18;color:#fff;border-radius:999px;padding:9px 13px;cursor:pointer}.filter.active{background:#00c853;color:#071108;border-color:#00c853;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{background:#141815;border:1px solid #29302b;border-radius:14px;overflow:hidden}.video{aspect-ratio:16/9;background:#080a09;display:flex;align-items:center;justify-content:center}.video iframe{width:100%;height:100%;border:0}.info{padding:16px}.tag{font-size:11px;font-weight:800;color:#00c853;text-transform:uppercase}.info h3{margin:8px 0;overflow-wrap:anywhere}.info p{margin:0 0 12px;color:#b8c0ba;font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}.empty{padding:35px;text-align:center;border:1px dashed #3b443e;border-radius:14px;color:#aeb7b0;grid-column:1/-1}.pdf-icon{padding:28px;text-align:center;font-size:48px;background:#111512}.actions{display:flex;gap:8px;flex-wrap:wrap}input{width:100%;padding:12px;background:#141815;color:white;border:1px solid #39423c;border-radius:8px;font-size:16px}button{font-family:inherit}#estado{color:#c3cbc5;margin:12px 0}.reference{font-size:12px!important;color:#8e9d94!important}@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.grid{grid-template-columns:1fr}.header-inner{align-items:flex-start}.hero h1{font-size:23px}.back{font-size:12px}}
+</style></head><body><header><div class="header-inner"><div class="brand">RHINO TACTICAL ARMOR<span>PROTECCIÓN · RESISTENCIA · CONFIANZA</span></div><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><script>
+const URL_SERVIDOR='https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec';
+let catalogo={categorias:[],contenido:[]},categoriaActiva='todos',tipoActivo='todos',ocupado=false;
+function nodo(tag,texto,clase){const n=document.createElement(tag);if(texto!==undefined)n.textContent=texto;if(clase)n.className=clase;return n;}
+function normalizar(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function filtros(){
+ const categorias=document.getElementById('categorias');categorias.replaceChildren();
+ const tipos=document.getElementById('tipos');tipos.replaceChildren();
+ function boton(padre,id,nombre,seleccion,accion){const b=nodo('button',nombre,'filter'+(seleccion===id?' active':''));b.type='button';b.setAttribute('aria-pressed',String(seleccion===id));b.onclick=()=>{accion(id);filtros();mostrar();};padre.append(b);}
+ [['todos','Todo'],['VIDEO','Videos'],['PDF','PDF / Normativa']].forEach(x=>boton(tipos,x[0],x[1],tipoActivo,id=>tipoActivo=id));
+ boton(categorias,'todos','Todas las categorías',categoriaActiva,id=>categoriaActiva=id);
+ catalogo.categorias.forEach(c=>boton(categorias,c.id,c.nombre,categoriaActiva,id=>categoriaActiva=id));
+}
+function enlace(texto,url){const a=nodo('a',texto,'link');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
+function mostrar(){
+ const contenedor=document.getElementById('videos');contenedor.replaceChildren();const q=normalizar(document.getElementById('busqueda').value);
+ const lista=catalogo.contenido.filter(x=>(categoriaActiva==='todos'||x.categoria_id===categoriaActiva)&&(tipoActivo==='todos'||x.tipo===tipoActivo)&&normalizar([x.titulo,x.descripcion,x.referencia].join(' ')).includes(q));
+ document.getElementById('estado').textContent=lista.length+' publicaciones';
+ if(!lista.length){contenedor.append(nodo('div',catalogo.contenido.length?'No hay contenido que coincida con estos filtros.':'Aún no hay videos ni documentos publicados.','empty'));return;}
+ lista.forEach(x=>{
+  const card=nodo('article',undefined,'card');
+  const info=nodo('div',undefined,'info');const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
+  info.append(nodo('span',(x.tipo==='VIDEO'?'Video':'PDF')+' · '+(cat?cat.nombre:''),'tag'),nodo('h3',x.titulo),nodo('p',x.descripcion));
+  const acciones=nodo('div',undefined,'actions');
+  if(x.tipo==='VIDEO'){
+   const m=String(x.url).match(/^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$/);if(!m)return;
+   const zona=nodo('div',undefined,'video');const reproducir=nodo('button','▶ Ver video','filter');
+   reproducir.onclick=()=>{const iframe=nodo('iframe');iframe.src='https://www.youtube-nocookie.com/embed/'+m[1];iframe.title=x.titulo;iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;zona.replaceChildren(iframe);};zona.append(reproducir);card.append(zona);acciones.append(enlace('Abrir en YouTube',x.url));
+  }else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){
+   card.append(nodo('div','📄','pdf-icon'));acciones.append(enlace('Ver PDF','https://drive.google.com/file/d/'+x.archivo_id+'/view'),enlace('⬇ Descargar','https://drive.google.com/uc?export=download&id='+x.archivo_id));
+  }else return;
+  if(x.referencia)info.append(nodo('p',x.referencia,'reference'));info.append(acciones);card.append(info);contenedor.append(card);
+ });
+}
+async function cargar(){if(ocupado)return;ocupado=true;document.getElementById('reintentar').hidden=true;
+ try{const r=await fetch(URL_SERVIDOR+'?accion=listarContenidoPublico&t='+Date.now(),{cache:'no-store'});const d=await r.json();if(!d.ok||!Array.isArray(d.contenido)||!Array.isArray(d.categorias))throw new Error('No se pudo cargar el contenido.');catalogo=d;if(!catalogo.categorias.some(c=>c.id===categoriaActiva))categoriaActiva='todos';filtros();mostrar();}
+ catch(e){document.getElementById('estado').textContent='No se pudo actualizar el contenido. Revisa tu conexión e inténtalo de nuevo.';document.getElementById('reintentar').hidden=false;}finally{ocupado=false;}}
+document.getElementById('busqueda').oninput=mostrar;document.getElementById('reintentar').onclick=cargar;window.addEventListener('focus',cargar);cargar();
+</script></body></html>
