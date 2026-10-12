@@ -27,9 +27,9 @@ function filtros(){
  const categorias=document.getElementById('categorias');categorias.replaceChildren();
  const tipos=document.getElementById('tipos');tipos.replaceChildren();
  function boton(padre,id,nombre,seleccion,accion){const b=nodo('button',nombre,'filter'+(seleccion===id?' active':''));b.type='button';b.setAttribute('aria-pressed',String(seleccion===id));b.onclick=()=>{accion(id);filtros();mostrar();};padre.append(b);}
- [['todos','Todo'],['VIDEO','Videos'],['PDF','PDF / Normativa']].forEach(x=>boton(tipos,x[0],x[1],tipoActivo,id=>tipoActivo=id));
+ [['todos','Todo'],['VIDEO','Videos'],['PDF','PDF / Normativa']].forEach(x=>boton(tipos,x[0],x[1],tipoActivo,id=>{tipoActivo=id;categoriaActiva='todos';}));
  boton(categorias,'todos','Todas las categorías',categoriaActiva,id=>categoriaActiva=id);
- catalogo.categorias.forEach(c=>boton(categorias,c.id,c.nombre,categoriaActiva,id=>categoriaActiva=id));
+ catalogo.categorias.filter(c=>tipoActivo==='todos'||c.tipo===tipoActivo).forEach(c=>boton(categorias,c.id,c.nombre+(tipoActivo==='todos'?(c.tipo==='PDF'?' · Normativa':' · Videos'):''),categoriaActiva,id=>categoriaActiva=id));
 }
 function enlace(texto,url){const a=nodo('a',texto,'link');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 
