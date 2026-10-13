@@ -18,6 +18,18 @@ main{max-width:1400px}.hero,.card{background:rgba(13,19,15,.95);border-color:rgb
 @media(max-width:850px){.header-inner{gap:16px}.brand-text strong{font-size:22px;letter-spacing:1px}}
 @media(max-width:560px){.rhino-topbar{font-size:9px;letter-spacing:1px;padding:6px 12px}.header-inner{padding:12px;gap:12px;flex-wrap:wrap;align-items:center}.logo-area{gap:10px}.brand-mark{width:65px;height:58px}.brand-text strong{font-size:18px;letter-spacing:1px}.brand-text p{font-size:9px;letter-spacing:.5px}.back{padding:9px 12px}.rhino-banner{border-left:0;border-right:0}.rhino-banner img{object-fit:contain}}
 
+
+/* Tarjetas compactas de documentos; videos conservan su formato. */
+.grid{align-items:start}.grid.normativa-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.card.documento{display:grid;grid-template-columns:70px minmax(0,1fr);border-radius:10px;align-items:start;min-width:0}
+.documento .portada,.documento .pdf-icon{width:70px;height:100px;aspect-ratio:auto;margin:12px 0 12px 10px;background:transparent}
+.documento .pdf-icon{padding:24px 0;font-size:36px}.documento .portada img{object-fit:contain}
+.documento .info{padding:12px 10px 12px 18px;min-width:0}.documento .tag{font-size:10px}.documento .info h3{font-size:15px;line-height:1.3;margin:6px 0 9px}
+.documento .actions{gap:6px}.documento .link{font-size:12px;padding:8px 9px;min-height:36px}
+.documento details{margin:0 0 10px;color:#b8c0ba;font-size:12px}.documento summary{cursor:pointer;color:#a7cbaa;padding:4px 0}.documento details p{font-size:12px;line-height:1.4;margin:7px 0}
+@media(max-width:1100px){.grid.normativa-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.grid.normativa-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.grid.normativa-grid{grid-template-columns:1fr;gap:10px}.card.documento{grid-template-columns:65px minmax(0,1fr)}.documento .portada,.documento .pdf-icon{width:65px;height:90px}.documento .info{padding-left:18px}.documento .link{min-height:44px;display:inline-flex;align-items:center}.documento summary{min-height:36px;display:flex;align-items:center}}
 </style></head><body><header><div class="rhino-topbar">DISCIPLINA | EQUIPO | PREPARACIÓN | SIEMPRE LISTOS</div><div class="header-inner"><a class="logo-area" href="index.html" aria-label="RHINO TACTICAL ARMOR, volver a la tienda"><div class="brand-mark"><img src="logo-rhino.png" alt="Logo RHINO TACTICAL ARMOR"></div><div class="brand-text"><strong>RHINO TACTICAL ARMOR</strong><p>EQUIPAMIENTO TÁCTICO · APH · PROFESIONAL</p></div></a><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><section class="rhino-banner" aria-label="Banner RHINO"><img src="banner-rhino.png" alt="RHINO TACTICAL ARMOR"></section><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><script>
 const URL_SERVIDOR='https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec';
 let catalogo={categorias:[],contenido:[]},categoriaActiva='todos',tipoActivo='todos',ocupado=false;
@@ -53,12 +65,14 @@ function portadaDocumento(x){
 function mostrar(){
  const contenedor=document.getElementById('videos');contenedor.replaceChildren();const q=normalizar(document.getElementById('busqueda').value);
  const lista=catalogo.contenido.filter(x=>(categoriaActiva==='todos'||x.categoria_id===categoriaActiva)&&(tipoActivo==='todos'||x.tipo===tipoActivo)&&normalizar([x.titulo,x.descripcion,x.referencia].join(' ')).includes(q));
+ contenedor.classList.toggle('normativa-grid',tipoActivo==='PDF'||(lista.length>0&&lista.every(x=>x.tipo==='PDF')));
  document.getElementById('estado').textContent=lista.length+(lista.length===1?' publicación':' publicaciones');
  if(!lista.length){contenedor.append(nodo('div',catalogo.contenido.length?'No hay contenido que coincida con estos filtros.':'Aún no hay videos ni documentos publicados.','empty'));return;}
  lista.forEach(x=>{
-  const card=nodo('article',undefined,'card');
+  const card=nodo('article',undefined,'card'+(x.tipo==='PDF'?' documento':''));
   const info=nodo('div',undefined,'info');const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
-  info.append(nodo('span',(x.tipo==='VIDEO'?'Video':'PDF')+' · '+(cat?cat.nombre:''),'tag'),nodo('h3',x.titulo),nodo('p',x.descripcion));
+  info.append(nodo('span',(x.tipo==='VIDEO'?'Video':'PDF')+' · '+(cat?cat.nombre:''),'tag'),nodo('h3',x.titulo));
+  if(x.tipo==='VIDEO'&&x.descripcion)info.append(nodo('p',x.descripcion));
   const acciones=nodo('div',undefined,'actions');
   if(x.tipo==='VIDEO'){
    const m=String(x.url).match(/^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$/);if(!m)return;
@@ -67,7 +81,7 @@ function mostrar(){
   }else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){
    card.append(portadaDocumento(x));acciones.append(enlace('Ver PDF','https://drive.google.com/file/d/'+x.archivo_id+'/view'),enlace('⬇ Descargar','https://drive.google.com/uc?export=download&id='+x.archivo_id));
   }else return;
-  if(x.referencia)info.append(nodo('p',x.referencia,'reference'));info.append(acciones);card.append(info);contenedor.append(card);
+  if(x.tipo==='PDF'&&(x.descripcion||x.referencia)){const detalles=nodo('details');detalles.append(nodo('summary','Más información'));if(x.descripcion)detalles.append(nodo('p',x.descripcion));if(x.referencia)detalles.append(nodo('p',x.referencia,'reference'));info.append(detalles);}else if(x.referencia)info.append(nodo('p',x.referencia,'reference'));info.append(acciones);card.append(info);contenedor.append(card);
  });
 }
 async function cargar(){if(ocupado)return;ocupado=true;document.getElementById('reintentar').hidden=true;
