@@ -33,7 +33,14 @@ main{max-width:1400px}.hero,.card{background:rgba(13,19,15,.95);border-color:rgb
 dialog.detalle-pdf{width:min(720px,calc(100% - 24px));max-height:90vh;max-height:90dvh;overflow:auto;padding:0;border:1px solid #446a39;border-radius:14px;background:#111812;color:#eee;box-shadow:0 20px 70px #0009}dialog.detalle-pdf::backdrop{background:rgba(0,0,0,.75)}.detalle-cabecera{position:sticky;top:0;z-index:1;background:#111812;display:flex;align-items:flex-start;gap:16px;padding:18px;border-bottom:1px solid #293e2b}.detalle-cabecera h2{font-size:21px;line-height:1.3;margin:0;flex:1;overflow-wrap:anywhere}.cerrar-detalle{background:#28362a;color:white;border:1px solid #57715a;border-radius:8px;min-width:44px;min-height:44px;font-size:23px;cursor:pointer}.detalle-cuerpo{display:grid;grid-template-columns:140px minmax(0,1fr);gap:22px;padding:20px}.detalle-portada .portada{aspect-ratio:auto;height:190px}.detalle-portada .pdf-icon{padding:45px 0}.detalle-texto p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55;color:#c8d1c9;margin:0 0 16px}.detalle-texto h3{font-size:14px;margin:0 0 6px;color:#7ddd42}.detalle-pdf .actions{padding:0 20px 22px}.detalle-pdf .link{min-height:44px;display:inline-flex;align-items:center}
 @media(max-width:560px){.detalle-cuerpo{grid-template-columns:1fr;gap:15px;padding:16px}.detalle-portada{max-width:110px;margin:auto;width:100%}.detalle-portada .portada{height:150px}.detalle-cabecera{padding:14px}.detalle-cabecera h2{font-size:18px}.detalle-pdf .actions{padding:0 16px 18px}}
 [hidden]{display:none!important}.detalle-reproductor{aspect-ratio:16/9;margin:0 20px 18px;background:black}.detalle-reproductor iframe{width:100%;height:100%;border:0}.detalle-portada .miniatura-video{height:110px}@media(max-width:560px){.detalle-reproductor{margin:0 16px 16px}.detalle-portada.portada-video{max-width:220px}}
-</style></head><body><header><div class="rhino-topbar">DISCIPLINA | EQUIPO | PREPARACIÓN | SIEMPRE LISTOS</div><div class="header-inner"><a class="logo-area" href="index.html" aria-label="RHINO TACTICAL ARMOR, volver a la tienda"><div class="brand-mark"><img src="logo-rhino.png" alt="Logo RHINO TACTICAL ARMOR"></div><div class="brand-text"><strong>RHINO TACTICAL ARMOR</strong><p>EQUIPAMIENTO TÁCTICO · APH · PROFESIONAL</p></div></a><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><section class="rhino-banner" aria-label="Banner RHINO"><img src="banner-rhino.png" alt="RHINO TACTICAL ARMOR"></section><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><dialog id="detallePdf" class="detalle-pdf" aria-labelledby="detalleTitulo"><div class="detalle-cabecera"><h2 id="detalleTitulo"></h2><button id="cerrarDetallePdf" class="cerrar-detalle" type="button" aria-label="Cerrar detalles">×</button></div><div class="detalle-cuerpo"><div id="detallePortada" class="detalle-portada"></div><div id="detalleTexto" class="detalle-texto"></div></div><div id="detalleReproductor" class="detalle-reproductor" hidden></div><div id="detalleAcciones" class="actions"></div></dialog><script>
+
+/* Adaptación a las dimensiones reales de cada portada. */
+.card.documento.portada-vertical{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:stretch}
+.documento.portada-vertical .portada,.documento.portada-vertical .pdf-icon{width:86px;height:100%;min-height:0;flex-basis:auto;padding:8px;background:#090e0a}
+.documento.portada-vertical .info{height:100%;min-width:0;padding:10px 8px}.documento.portada-vertical .info h3{-webkit-line-clamp:4}.documento.portada-vertical .pdf-icon{display:flex;align-items:center;justify-content:center}
+.detalle-cuerpo.portada-horizontal{grid-template-columns:1fr;gap:18px}.detalle-cuerpo.portada-horizontal .detalle-portada{width:100%;max-width:none;margin:0}.detalle-cuerpo.portada-horizontal .portada{height:auto;aspect-ratio:auto;max-height:270px;background:transparent}.detalle-cuerpo.portada-horizontal .portada img{width:100%;height:auto;max-height:270px;object-fit:contain}.detalle-cuerpo.portada-horizontal .miniatura-video{height:220px}.detalle-cuerpo.portada-vertical .detalle-portada{width:100%;margin:0}
+@media(max-width:560px){.card.documento.portada-vertical{grid-template-columns:55px minmax(0,1fr)}.documento.portada-vertical .portada,.documento.portada-vertical .pdf-icon{width:55px;padding:5px}.documento.portada-vertical .info{padding:8px 6px}.documento.portada-vertical .info h3{-webkit-line-clamp:4}.detalle-cuerpo.portada-vertical{grid-template-columns:90px minmax(0,1fr);gap:12px}.detalle-cuerpo.portada-vertical .detalle-portada{max-width:90px}.detalle-cuerpo.portada-vertical .portada{height:145px}.detalle-cuerpo.portada-horizontal .portada,.detalle-cuerpo.portada-horizontal .portada img{max-height:200px}.detalle-cuerpo.portada-horizontal .miniatura-video{height:160px}}
+</style></head><body><header><div class="rhino-topbar">DISCIPLINA | EQUIPO | PREPARACIÓN | SIEMPRE LISTOS</div><div class="header-inner"><a class="logo-area" href="index.html" aria-label="RHINO TACTICAL ARMOR, volver a la tienda"><div class="brand-mark"><img src="logo-rhino.png" alt="Logo RHINO TACTICAL ARMOR"></div><div class="brand-text"><strong>RHINO TACTICAL ARMOR</strong><p>EQUIPAMIENTO TÁCTICO · APH · PROFESIONAL</p></div></a><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><section class="rhino-banner" aria-label="Banner RHINO"><img src="banner-rhino.png" alt="RHINO TACTICAL ARMOR"></section><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><dialog id="detallePdf" class="detalle-pdf" aria-labelledby="detalleTitulo"><div class="detalle-cabecera"><h2 id="detalleTitulo"></h2><button id="cerrarDetallePdf" class="cerrar-detalle" type="button" aria-label="Cerrar detalles">×</button></div><div id="detalleCuerpo" class="detalle-cuerpo"><div id="detallePortada" class="detalle-portada"></div><div id="detalleTexto" class="detalle-texto"></div></div><div id="detalleReproductor" class="detalle-reproductor" hidden></div><div id="detalleAcciones" class="actions"></div></dialog><script>
 const URL_SERVIDOR='https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec';
 let catalogo={categorias:[],contenido:[]},categoriaActiva='todos',tipoActivo='todos',ocupado=false;
 function nodo(tag,texto,clase){const n=document.createElement(tag);if(texto!==undefined)n.textContent=texto;if(clase)n.className=clase;return n;}
@@ -48,10 +55,12 @@ function filtros(){
 }
 function enlace(texto,url){const a=nodo('a',texto,'link');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
 
-const cachePortadasRhino=new Map();
-function portadaDocumento(x){
+const cachePortadasRhino=new Map();const orientacionesPortadasRhino=new Map();
+function portadaDocumento(x,alOrientar){
  if(!/^[A-Za-z0-9_-]+$/.test(x.portada_id||''))return nodo('div','📄','pdf-icon');
  const zona=nodo('div',undefined,'portada');const img=nodo('img');img.alt='Portada de '+x.titulo;img.loading='lazy';img.referrerPolicy='no-referrer';
+ if(alOrientar&&orientacionesPortadasRhino.has(x.portada_id))alOrientar(orientacionesPortadasRhino.get(x.portada_id));
+ img.onload=()=>{if(!img.naturalWidth||!img.naturalHeight)return;const orientacion=img.naturalWidth>img.naturalHeight?'horizontal':'vertical';orientacionesPortadasRhino.set(x.portada_id,orientacion);if(alOrientar)alOrientar(orientacion);};
  let recuperando=false;
  img.onerror=async()=>{
   if(recuperando){zona.replaceWith(nodo('div','📄','pdf-icon'));return;}
@@ -72,11 +81,12 @@ function miniaturaVideo(x){
  img.onerror=()=>{if(intento++===0)img.src='https://i.ytimg.com/vi/'+id+'/mqdefault.jpg';else img.remove();};
  img.src='https://i.ytimg.com/vi/'+id+'/hqdefault.jpg';zona.append(img,nodo('span','▶'));return zona;
 }
-let focoDocumentoAnterior=null;
+let focoDocumentoAnterior=null,versionDetalleRhino=0;
 function abrirDetalleContenido(x,origen){
  const modal=document.getElementById('detallePdf');focoDocumentoAnterior=origen||document.activeElement;
  document.getElementById('detalleTitulo').textContent=x.titulo;
- const portada=document.getElementById('detallePortada');portada.classList.toggle('portada-video',x.tipo==='VIDEO');portada.replaceChildren(x.tipo==='VIDEO'?miniaturaVideo(x):portadaDocumento(x));
+ const turno=++versionDetalleRhino;const cuerpo=document.getElementById('detalleCuerpo');cuerpo.classList.toggle('portada-horizontal',x.tipo==='VIDEO');cuerpo.classList.toggle('portada-vertical',x.tipo==='PDF');
+ const portada=document.getElementById('detallePortada');portada.classList.toggle('portada-video',x.tipo==='VIDEO');portada.replaceChildren(x.tipo==='VIDEO'?miniaturaVideo(x):portadaDocumento(x,orientacion=>{if(turno!==versionDetalleRhino)return;cuerpo.classList.toggle('portada-horizontal',orientacion==='horizontal');cuerpo.classList.toggle('portada-vertical',orientacion==='vertical');}));
  const reproductor=document.getElementById('detalleReproductor');reproductor.replaceChildren();reproductor.hidden=true;
  const texto=document.getElementById('detalleTexto');texto.replaceChildren();const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
  function dato(titulo,valor){texto.append(nodo('h3',titulo),nodo('p',valor));}
@@ -90,7 +100,7 @@ function abrirDetalleContenido(x,origen){
  modal.showModal();document.getElementById('cerrarDetallePdf').focus();
 }
 document.getElementById('cerrarDetallePdf').onclick=()=>document.getElementById('detallePdf').close();
-document.getElementById('detallePdf').addEventListener('close',()=>{document.getElementById('detalleReproductor').replaceChildren();document.getElementById('detalleReproductor').hidden=true;if(focoDocumentoAnterior&&focoDocumentoAnterior.isConnected)focoDocumentoAnterior.focus();else document.getElementById('busqueda').focus();});
+document.getElementById('detallePdf').addEventListener('close',()=>{versionDetalleRhino++;document.getElementById('detalleReproductor').replaceChildren();document.getElementById('detalleReproductor').hidden=true;if(focoDocumentoAnterior&&focoDocumentoAnterior.isConnected)focoDocumentoAnterior.focus();else document.getElementById('busqueda').focus();});
 function mostrar(){
  const contenedor=document.getElementById('videos');contenedor.replaceChildren();const q=normalizar(document.getElementById('busqueda').value);
  const lista=catalogo.contenido.filter(x=>(categoriaActiva==='todos'||x.categoria_id===categoriaActiva)&&(tipoActivo==='todos'||x.tipo===tipoActivo)&&normalizar([x.titulo,x.descripcion,x.referencia].join(' ')).includes(q));
@@ -104,7 +114,7 @@ function mostrar(){
   
   const acciones=nodo('div',undefined,'actions');
   if(x.tipo==='VIDEO'){if(!idVideoRhino(x))return;card.append(miniaturaVideo(x));}
-  else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){card.append(portadaDocumento(x));}else return;
+  else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){card.classList.add('portada-vertical');card.append(portadaDocumento(x,orientacion=>{card.classList.toggle('portada-horizontal',orientacion==='horizontal');card.classList.toggle('portada-vertical',orientacion==='vertical');}));}else return;
   card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-haspopup','dialog');card.setAttribute('aria-label','Ver detalles de '+x.titulo);card.title=x.titulo;
   card.onclick=()=>abrirDetalleContenido(x,card);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirDetalleContenido(x,card);}};
   acciones.append(nodo('span','Ver detalles','abrir-detalles'));
