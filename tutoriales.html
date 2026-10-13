@@ -19,22 +19,21 @@ main{max-width:1400px}.hero,.card{background:rgba(13,19,15,.95);border-color:rgb
 @media(max-width:560px){.rhino-topbar{font-size:9px;letter-spacing:1px;padding:6px 12px}.header-inner{padding:12px;gap:12px;flex-wrap:wrap;align-items:center}.logo-area{gap:10px}.brand-mark{width:65px;height:58px}.brand-text strong{font-size:18px;letter-spacing:1px}.brand-text p{font-size:9px;letter-spacing:.5px}.back{padding:9px 12px}.rhino-banner{border-left:0;border-right:0}.rhino-banner img{object-fit:contain}}
 
 
-/* Tarjetas compactas de documentos; videos conservan su formato. */
-.grid{align-items:start}.grid.normativa-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;grid-auto-rows:1fr;align-items:stretch}
-.card.documento{display:grid;grid-template-columns:70px minmax(0,1fr);border-radius:10px;align-items:start;min-width:0;height:100%;min-height:175px}.documento .info{display:flex;flex-direction:column;height:100%}.documento .actions{margin-top:auto}
-.documento .portada,.documento .pdf-icon{width:70px;height:100px;aspect-ratio:auto;margin:12px 0 12px 10px;background:transparent}
-.documento .pdf-icon{padding:24px 0;font-size:36px}.documento .portada img{object-fit:contain}
-.documento .info{padding:12px 10px 12px 18px;min-width:0}.documento .tag{font-size:10px}.documento .info h3{font-size:15px;line-height:1.3;margin:6px 0 9px}
-.documento .actions{gap:6px}.documento .link{font-size:12px;padding:8px 9px;min-height:36px}
-.documento details{margin:0 0 10px;color:#b8c0ba;font-size:12px}.documento summary{cursor:pointer;color:#a7cbaa;padding:4px 0}.documento details p{font-size:12px;line-height:1.4;margin:7px 0}
-@media(max-width:1100px){.grid.normativa-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:800px){.grid.normativa-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){.grid.normativa-grid{grid-template-columns:1fr;gap:10px}.card.documento{grid-template-columns:65px minmax(0,1fr)}.documento .portada,.documento .pdf-icon{width:65px;height:90px}.documento .info{padding-left:18px}.documento .link{min-height:44px;display:inline-flex;align-items:center}.documento summary{min-height:36px;display:flex;align-items:center}}
-
+/* Catálogo compacto uniforme de videos y documentos. */
+.grid,.grid.normativa-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:190px;align-items:stretch;gap:12px}
+.card.documento,.card.video-tarjeta{display:flex;flex-direction:column;cursor:pointer;min-width:0;height:190px;min-height:0;border-radius:10px}
+.card.video-tarjeta:hover{border-color:#00c853}.card.video-tarjeta:focus-visible{outline:3px solid #00c853;outline-offset:3px}
+.documento .portada,.documento .pdf-icon,.video-tarjeta .miniatura-video{width:100%;height:88px;flex:0 0 88px;aspect-ratio:auto;margin:0;background:#090e0a;overflow:hidden}
+.documento .portada img{object-fit:contain}.documento .pdf-icon{padding:22px 0;font-size:34px}.miniatura-video{position:relative}.miniatura-video img{width:100%;height:100%;object-fit:cover;display:block}.miniatura-video span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:white;font-size:30px;text-shadow:0 2px 7px #000}
+.documento .info,.video-tarjeta .info{padding:9px 10px;min-height:0;flex:1;display:flex;flex-direction:column}.documento .tag,.video-tarjeta .tag{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.documento .info h3,.video-tarjeta .info h3{font-size:14px;line-height:1.25;margin:6px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}.documento .actions,.video-tarjeta .actions{margin-top:auto}.abrir-detalles{font-size:11px;color:#7ddd42}
+@media(max-width:1000px){.grid,.grid.normativa-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.grid,.grid.normativa-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.grid,.grid.normativa-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:160px;gap:8px}.card.documento,.card.video-tarjeta{height:160px}.documento .portada,.documento .pdf-icon,.video-tarjeta .miniatura-video{height:68px;flex-basis:68px}.documento .pdf-icon{padding:14px 0}.documento .info,.video-tarjeta .info{padding:7px 8px}.documento .info h3,.video-tarjeta .info h3{font-size:12px;margin:5px 0}.documento .tag,.video-tarjeta .tag{font-size:9px}.hero{padding:12px;margin-bottom:12px}.hero h1{font-size:19px;margin-bottom:5px}.hero p{font-size:12px;line-height:1.4}.filters{gap:6px;margin:10px 0}.filter{padding:8px 10px;font-size:12px}main{padding:16px 12px 35px}.rhino-banner img{max-height:100px;object-fit:contain}}
 .card.documento{cursor:pointer}.card.documento:hover{border-color:#00c853}.card.documento:focus-visible{outline:3px solid #00c853;outline-offset:3px}.documento .abrir-detalles{font-size:12px;color:#7ddd42;padding:8px 0}
 dialog.detalle-pdf{width:min(720px,calc(100% - 24px));max-height:90vh;max-height:90dvh;overflow:auto;padding:0;border:1px solid #446a39;border-radius:14px;background:#111812;color:#eee;box-shadow:0 20px 70px #0009}dialog.detalle-pdf::backdrop{background:rgba(0,0,0,.75)}.detalle-cabecera{position:sticky;top:0;z-index:1;background:#111812;display:flex;align-items:flex-start;gap:16px;padding:18px;border-bottom:1px solid #293e2b}.detalle-cabecera h2{font-size:21px;line-height:1.3;margin:0;flex:1;overflow-wrap:anywhere}.cerrar-detalle{background:#28362a;color:white;border:1px solid #57715a;border-radius:8px;min-width:44px;min-height:44px;font-size:23px;cursor:pointer}.detalle-cuerpo{display:grid;grid-template-columns:140px minmax(0,1fr);gap:22px;padding:20px}.detalle-portada .portada{aspect-ratio:auto;height:190px}.detalle-portada .pdf-icon{padding:45px 0}.detalle-texto p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55;color:#c8d1c9;margin:0 0 16px}.detalle-texto h3{font-size:14px;margin:0 0 6px;color:#7ddd42}.detalle-pdf .actions{padding:0 20px 22px}.detalle-pdf .link{min-height:44px;display:inline-flex;align-items:center}
 @media(max-width:560px){.detalle-cuerpo{grid-template-columns:1fr;gap:15px;padding:16px}.detalle-portada{max-width:110px;margin:auto;width:100%}.detalle-portada .portada{height:150px}.detalle-cabecera{padding:14px}.detalle-cabecera h2{font-size:18px}.detalle-pdf .actions{padding:0 16px 18px}}
-</style></head><body><header><div class="rhino-topbar">DISCIPLINA | EQUIPO | PREPARACIÓN | SIEMPRE LISTOS</div><div class="header-inner"><a class="logo-area" href="index.html" aria-label="RHINO TACTICAL ARMOR, volver a la tienda"><div class="brand-mark"><img src="logo-rhino.png" alt="Logo RHINO TACTICAL ARMOR"></div><div class="brand-text"><strong>RHINO TACTICAL ARMOR</strong><p>EQUIPAMIENTO TÁCTICO · APH · PROFESIONAL</p></div></a><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><section class="rhino-banner" aria-label="Banner RHINO"><img src="banner-rhino.png" alt="RHINO TACTICAL ARMOR"></section><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><dialog id="detallePdf" class="detalle-pdf" aria-labelledby="detalleTitulo"><div class="detalle-cabecera"><h2 id="detalleTitulo"></h2><button id="cerrarDetallePdf" class="cerrar-detalle" type="button" aria-label="Cerrar detalles">×</button></div><div class="detalle-cuerpo"><div id="detallePortada" class="detalle-portada"></div><div id="detalleTexto" class="detalle-texto"></div></div><div id="detalleAcciones" class="actions"></div></dialog><script>
+[hidden]{display:none!important}.detalle-reproductor{aspect-ratio:16/9;margin:0 20px 18px;background:black}.detalle-reproductor iframe{width:100%;height:100%;border:0}.detalle-portada .miniatura-video{height:110px}@media(max-width:560px){.detalle-reproductor{margin:0 16px 16px}.detalle-portada.portada-video{max-width:220px}}
+</style></head><body><header><div class="rhino-topbar">DISCIPLINA | EQUIPO | PREPARACIÓN | SIEMPRE LISTOS</div><div class="header-inner"><a class="logo-area" href="index.html" aria-label="RHINO TACTICAL ARMOR, volver a la tienda"><div class="brand-mark"><img src="logo-rhino.png" alt="Logo RHINO TACTICAL ARMOR"></div><div class="brand-text"><strong>RHINO TACTICAL ARMOR</strong><p>EQUIPAMIENTO TÁCTICO · APH · PROFESIONAL</p></div></a><a class="back" href="index.html">← VOLVER A LA TIENDA</a></div></header><section class="rhino-banner" aria-label="Banner RHINO"><img src="banner-rhino.png" alt="RHINO TACTICAL ARMOR"></section><main><section class="hero"><h1>▶ TUTORIALES Y NORMATIVA</h1><p>Videos sobre uso de equipo, primeros auxilios y uniformes. Documentos y normativa en PDF para consultar o descargar.</p></section><input id="busqueda" type="search" placeholder="Buscar por título, descripción o referencia" aria-label="Buscar contenido"><div id="tipos" class="filters" aria-label="Tipo de contenido"></div><div id="categorias" class="filters" aria-label="Categorías"></div><div id="estado" role="status">Cargando contenido…</div><div id="videos" class="grid"></div><button id="reintentar" class="filter" type="button" hidden>Reintentar</button></main><dialog id="detallePdf" class="detalle-pdf" aria-labelledby="detalleTitulo"><div class="detalle-cabecera"><h2 id="detalleTitulo"></h2><button id="cerrarDetallePdf" class="cerrar-detalle" type="button" aria-label="Cerrar detalles">×</button></div><div class="detalle-cuerpo"><div id="detallePortada" class="detalle-portada"></div><div id="detalleTexto" class="detalle-texto"></div></div><div id="detalleReproductor" class="detalle-reproductor" hidden></div><div id="detalleAcciones" class="actions"></div></dialog><script>
 const URL_SERVIDOR='https://script.google.com/macros/s/AKfycbw5LfmoztRCz4AMONfpoPYPL8uqcalm4OrOSMXgzW0IRFccgAfXvdCIYJySEZMV94pO0g/exec';
 let catalogo={categorias:[],contenido:[]},categoriaActiva='todos',tipoActivo='todos',ocupado=false;
 function nodo(tag,texto,clase){const n=document.createElement(tag);if(texto!==undefined)n.textContent=texto;if(clase)n.className=clase;return n;}
@@ -67,23 +66,31 @@ function portadaDocumento(x){
 }
 
 
+function idVideoRhino(x){const m=String(x.url).match(/^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$/);return m?m[1]:'';}
+function miniaturaVideo(x){
+ const zona=nodo('div',undefined,'miniatura-video'),img=nodo('img');const id=idVideoRhino(x);img.alt='Miniatura de '+x.titulo;img.loading='lazy';let intento=0;
+ img.onerror=()=>{if(intento++===0)img.src='https://i.ytimg.com/vi/'+id+'/mqdefault.jpg';else img.remove();};
+ img.src='https://i.ytimg.com/vi/'+id+'/hqdefault.jpg';zona.append(img,nodo('span','▶'));return zona;
+}
 let focoDocumentoAnterior=null;
-function abrirDetallePdf(x,origen){
+function abrirDetalleContenido(x,origen){
  const modal=document.getElementById('detallePdf');focoDocumentoAnterior=origen||document.activeElement;
  document.getElementById('detalleTitulo').textContent=x.titulo;
- document.getElementById('detallePortada').replaceChildren(portadaDocumento(x));
- const texto=document.getElementById('detalleTexto');texto.replaceChildren();
- const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
+ const portada=document.getElementById('detallePortada');portada.classList.toggle('portada-video',x.tipo==='VIDEO');portada.replaceChildren(x.tipo==='VIDEO'?miniaturaVideo(x):portadaDocumento(x));
+ const reproductor=document.getElementById('detalleReproductor');reproductor.replaceChildren();reproductor.hidden=true;
+ const texto=document.getElementById('detalleTexto');texto.replaceChildren();const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
  function dato(titulo,valor){texto.append(nodo('h3',titulo),nodo('p',valor));}
- dato('Categoría',cat?cat.nombre:'Normativa');
- dato('Descripción',x.descripcion||'Este documento no tiene descripción adicional.');
- if(x.referencia)dato('Referencia / institución / fecha',x.referencia);
- document.getElementById('detalleAcciones').replaceChildren(enlace('Ver PDF','https://drive.google.com/file/d/'+x.archivo_id+'/view'),enlace('⬇ Descargar PDF','https://drive.google.com/uc?export=download&id='+x.archivo_id));
+ dato('Categoría',cat?cat.nombre:(x.tipo==='VIDEO'?'Videos':'Normativa'));dato('Descripción',x.descripcion||'Sin descripción adicional.');if(x.referencia)dato('Referencia / institución / fecha',x.referencia);
+ const acciones=document.getElementById('detalleAcciones');acciones.replaceChildren();
+ if(x.tipo==='VIDEO'){
+  const reproducir=nodo('button','▶ Reproducir video','filter');reproducir.type='button';
+  reproducir.onclick=()=>{const iframe=nodo('iframe');iframe.src='https://www.youtube-nocookie.com/embed/'+idVideoRhino(x)+'?autoplay=1';iframe.title=x.titulo;iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;reproductor.replaceChildren(iframe);reproductor.hidden=false;reproductor.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  acciones.append(reproducir,enlace('Abrir en YouTube',x.url));
+ }else acciones.append(enlace('Ver PDF','https://drive.google.com/file/d/'+x.archivo_id+'/view'),enlace('⬇ Descargar PDF','https://drive.google.com/uc?export=download&id='+x.archivo_id));
  modal.showModal();document.getElementById('cerrarDetallePdf').focus();
 }
 document.getElementById('cerrarDetallePdf').onclick=()=>document.getElementById('detallePdf').close();
-document.getElementById('detallePdf').addEventListener('close',()=>{if(focoDocumentoAnterior&&focoDocumentoAnterior.isConnected)focoDocumentoAnterior.focus();else document.getElementById('busqueda').focus();});
-
+document.getElementById('detallePdf').addEventListener('close',()=>{document.getElementById('detalleReproductor').replaceChildren();document.getElementById('detalleReproductor').hidden=true;if(focoDocumentoAnterior&&focoDocumentoAnterior.isConnected)focoDocumentoAnterior.focus();else document.getElementById('busqueda').focus();});
 function mostrar(){
  const contenedor=document.getElementById('videos');contenedor.replaceChildren();const q=normalizar(document.getElementById('busqueda').value);
  const lista=catalogo.contenido.filter(x=>(categoriaActiva==='todos'||x.categoria_id===categoriaActiva)&&(tipoActivo==='todos'||x.tipo===tipoActivo)&&normalizar([x.titulo,x.descripcion,x.referencia].join(' ')).includes(q));
@@ -91,19 +98,17 @@ function mostrar(){
  document.getElementById('estado').textContent=lista.length+(lista.length===1?' publicación':' publicaciones');
  if(!lista.length){contenedor.append(nodo('div',catalogo.contenido.length?'No hay contenido que coincida con estos filtros.':'Aún no hay videos ni documentos publicados.','empty'));return;}
  lista.forEach(x=>{
-  const card=nodo('article',undefined,'card'+(x.tipo==='PDF'?' documento':''));
+  const card=nodo('article',undefined,'card'+(x.tipo==='PDF'?' documento':' video-tarjeta'));
   const info=nodo('div',undefined,'info');const cat=catalogo.categorias.find(c=>c.id===x.categoria_id);
   info.append(nodo('span',(x.tipo==='VIDEO'?'Video':'PDF')+' · '+(cat?cat.nombre:''),'tag'),nodo('h3',x.titulo));
-  if(x.tipo==='VIDEO'&&x.descripcion)info.append(nodo('p',x.descripcion));
+  
   const acciones=nodo('div',undefined,'actions');
-  if(x.tipo==='VIDEO'){
-   const m=String(x.url).match(/^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$/);if(!m)return;
-   const zona=nodo('div',undefined,'video');const reproducir=nodo('button','▶ Ver video','filter');
-   reproducir.onclick=()=>{const iframe=nodo('iframe');iframe.src='https://www.youtube-nocookie.com/embed/'+m[1];iframe.title=x.titulo;iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;zona.replaceChildren(iframe);};zona.append(reproducir);card.append(zona);acciones.append(enlace('Abrir en YouTube',x.url));
-  }else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){
-   card.append(portadaDocumento(x));card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-haspopup','dialog');card.setAttribute('aria-label','Ver detalles de '+x.titulo);card.onclick=()=>abrirDetallePdf(x,card);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirDetallePdf(x,card);}};acciones.append(nodo('span','Ver detalles','abrir-detalles'));
-  }else return;
-  if(x.tipo==='VIDEO'&&x.referencia)info.append(nodo('p',x.referencia,'reference'));info.append(acciones);card.append(info);contenedor.append(card);
+  if(x.tipo==='VIDEO'){if(!idVideoRhino(x))return;card.append(miniaturaVideo(x));}
+  else if(x.tipo==='PDF'&&/^[A-Za-z0-9_-]+$/.test(x.archivo_id)){card.append(portadaDocumento(x));}else return;
+  card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-haspopup','dialog');card.setAttribute('aria-label','Ver detalles de '+x.titulo);card.title=x.titulo;
+  card.onclick=()=>abrirDetalleContenido(x,card);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirDetalleContenido(x,card);}};
+  acciones.append(nodo('span','Ver detalles','abrir-detalles'));
+  info.append(acciones);card.append(info);contenedor.append(card);
  });
 }
 async function cargar(){if(ocupado)return;ocupado=true;document.getElementById('reintentar').hidden=true;
